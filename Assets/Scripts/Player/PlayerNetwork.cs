@@ -62,7 +62,7 @@ public class PlayerNetwork : CharacterStateNetwork {
                 ThrowHeldProp();
             }
 
-            if (Input.GetButtonDown("Grab"))
+            if (Input.GetButtonDown("Use"))
             {
 
                 if (walking)
