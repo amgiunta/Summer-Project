@@ -397,7 +397,11 @@ public class PlayerNetwork : CharacterStateNetwork {
         IEnumerator SpinPlayer() {
             float segmentTime = animationTime / 4f;
             float tick = Time.deltaTime;
-            Quaternion newUp = Quaternion.Euler(0,0,player.transform.eulerAngles.z + 180f);
+
+            //Rotation Tests
+            Quaternion newUp = Quaternion.Euler(0, player.transform.eulerAngles.y + 180f, player.transform.eulerAngles.z + 180f);
+            //Quaternion newUp = Quaternion.Euler(0, 0, player.transform.eulerAngles.z + 180f);
+            //Quaternion newUp = Quaternion.Euler(player.transform.eulerAngles.x + 180f, 0, 0);
 
             for (float t = 0; t < segmentTime; t += tick) {
                 player.transform.position = Vector2.Lerp(player.transform.position, targetPosition, t);
