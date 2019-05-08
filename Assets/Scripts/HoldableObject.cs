@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(Collider2D))]
 /// <summary>
 /// Wrapper for gameobjects that are holdable.
 /// </summary>
 public class HoldableObject : MonoBehaviour {
+
 
     public bool orientWithPlayer;
     public bool invertUp;
