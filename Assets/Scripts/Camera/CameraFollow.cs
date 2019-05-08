@@ -40,8 +40,6 @@ public class CameraFollow : MonoBehaviour {
             transform.position = Vector3.Lerp(transform.position, position, cameraSpeed * Time.deltaTime);
         }
         else {
-            Debug.DrawRay(player.transform.position, player.transform.forward, Color.magenta);
-            Debug.Log(player.transform.forward);
             //transform.forward = player.transform.forward;
             position = player.transform.position + player.transform.TransformDirection(new Vector3(0,0,offset.z));
 
