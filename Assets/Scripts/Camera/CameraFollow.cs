@@ -26,14 +26,29 @@ public class CameraFollow : MonoBehaviour {
 	}
 
     void MoveCamera(out Vector3 position) {
-        position = player.GetFlipPivot(offset);
-        if (prediction && player) {
-            position += new Vector3(player.rigidbody.velocity.normalized.x * predictionAmount, 0f);
-        }
-
         if (player) { transform.localRotation = player.transform.localRotation; }
 
-        transform.position = Vector3.Lerp(transform.position, position, cameraSpeed * Time.deltaTime);
+        if (!player.flipping)
+        {
+            position = player.GetFlipPivot(offset);
+            if (prediction && player)
+            {
+                position += new Vector3(player.rigidbody.velocity.normalized.x * predictionAmount, 0f);
+            }
+
+
+            transform.position = Vector3.Lerp(transform.position, position, cameraSpeed * Time.deltaTime);
+        }
+        else {
+            Debug.DrawRay(player.transform.position, player.transform.forward, Color.magenta);
+            Debug.Log(player.transform.forward);
+            //transform.forward = player.transform.forward;
+            position = player.transform.position + player.transform.TransformDirection(new Vector3(0,0,offset.z));
+
+            transform.position = position;
+        }
+
+
     }
 
     void MoveCamera() {

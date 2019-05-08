@@ -136,9 +136,22 @@ public class PlayerNetwork : CharacterStateNetwork {
         base.FixedUpdate();
 
         // Add the force of grabity to this object on the relative up vector.
-        rigidbody.AddRelativeForce(new Vector2(0f, Physics2D.gravity.y * rigidbody.mass));
+        ApplyGravity();
 
         //Debug.Log("The active state is: " + activeState.name);
+    }
+
+    /// <summary>
+    /// Apply to force of gravity along the relative up vector.
+    /// </summary>
+    protected virtual void ApplyGravity()
+    {
+        // Create Vector direction that is the negative relative up vector
+        Vector3 direction = -transform.up;
+        // Multiply the direction by: the negative force of gravity multiplied by the mass of this object.
+        direction *= (-Physics2D.gravity.y * rigidbody.mass);
+        // Add direction to this object as a force.
+        rigidbody.AddForce(direction);
     }
 
     /// <summary>
@@ -349,6 +362,8 @@ public class PlayerNetwork : CharacterStateNetwork {
         Gizmos.DrawWireCube(transform.position, new Vector2(transform.localScale.x / 2, 0.2f));
 
         if (Application.isPlaying) { Debug.DrawRay(transform.position, rigidbody.velocity, Color.red); }
+
+        Debug.DrawRay(transform.position, transform.up, Color.blue);
     }
 
     /// <summary>
@@ -610,8 +625,8 @@ public class PlayerNetwork : CharacterStateNetwork {
             float segmentTime = animationTime / 4f;
             // Create float tick that is the length of 1 frame in seconds.
             float tick = Time.deltaTime;
-            // Create Quaternion new up from a euler angle: 0, 0, player's z angle + 180
-            Quaternion newUp = Quaternion.Euler(0,0,player.transform.eulerAngles.z + 180f);
+            // Create float angle that is 180 / (segment time / tick)
+            float angle = 180 / (segmentTime / tick);
 
             // Loop the following for every step of stride tick where t is between 0 and segment time.
             for (float t = 0; t < segmentTime; t += tick) {
@@ -625,11 +640,12 @@ public class PlayerNetwork : CharacterStateNetwork {
             // Loop the following for every step of stride tick where t is between 0 and segment time.
             for (float t = 0; t < segmentTime; t += tick) {
                 // Set the local rotation of the player to the linear interpolation at point t on the line between the player's local rotation and the new up.
-                player.transform.localRotation = Quaternion.Lerp(player.transform.localRotation, newUp, t);
+                // player.transform.rotation = Quaternion.Lerp(player.transform.rotation, newUp, t);
+
+                // Rotate the player around the z axis by angle
+                player.transform.Rotate(new Vector3(angle, 0, 0));
                 yield return new WaitForEndOfFrame();
             }
-            // Set the player's local rotation to new up.
-            player.transform.localRotation = newUp;
 
             // Set the done animating flag to true.
             doneAnimating = true;
