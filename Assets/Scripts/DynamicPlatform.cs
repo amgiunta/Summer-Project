@@ -2,63 +2,110 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Basic component for non-static platforms that can move at runtime and react to the player.
+/// </summary>
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(Collider2D))]
 public class DynamicPlatform : MonoBehaviour {
 
+    /// <summary>
+    /// Align the rotation of this platform to the rotation of the player.
+    /// </summary>
+    [Tooltip("Align the rotation of this platform to the rotation of the player.")]
     public bool orientWithPlayer;
+    [Tooltip("Friction value for this platform.")]
     public float friction;
 
+    /// <summary>
+    /// Current acting player in the scene.
+    /// </summary>
     [HideInInspector]
     public PlayerNetwork player;
+    /// <summary>
+    /// The rigidbody attached to this object.
+    /// </summary>
     [HideInInspector]
     new public Rigidbody2D rigidbody;
+    /// <summary>
+    /// The collider attached to this object.
+    /// </summary>
     [HideInInspector]
     new public Collider2D collider;
+    /// <summary>
+    /// CAn the player stand on this object?
+    /// </summary>
     public bool standable = true;
 
+    /// <summary>
+    /// The velocity of this platform's movement. DON'T USE Rigidbody2D.velocity!
+    /// </summary>
     [HideInInspector]
     public Vector3 velocity;
 
+    /// <summary>
+    /// The position of this platform on the previous frame.
+    /// </summary>
     private Vector3 _lastPosition;
 
 	// Use this for initialization
 	void Start () {
+        // Find the player and store a reference to it.
         FindPlayer();
+        // Get the rigidbody on this object.
         rigidbody = GetComponent<Rigidbody2D>();
+        // Get the collider on this object
         collider = GetComponent<Collider2D>();
 	}
 	
 	// Update is called once per frame
 	public virtual void FixedUpdate () {
+        // Calculate the velocity of this object and store it.
         CalcVelocity();
 
+        // Last position is the current position.
         _lastPosition = transform.position;
 	}
 
+    /// <summary>
+    /// Find the current acting player in the scene and store it in this object.
+    /// </summary>
     public virtual void FindPlayer() {
+        // Find the object in the scene with the tag "Player" and store a reference in DynamicPlatform.player. 
         player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerNetwork>();
 
+        // If player is not found, throw error.
         if (!player) { Debug.LogError("Could not locate player! Check to see if the player is in the scene, tagged as 'Player', and has the PlayerNetwors (or some derivative behavior) attached.", this); }
     }
 
+    /// <summary>
+    /// Set the rotation of the current object. Reletive to player if orientWithPlayer is true.
+    /// </summary>
     public virtual void Orient() {
+        // If player is not null and orientWithPlayer is true, set this object's rotation to the player's rotation.
         if (orientWithPlayer && player)
         {
             transform.localRotation = player.transform.localRotation;
         }
+        // If not, set this object's rotation to be the identity.
         else { transform.localRotation = Quaternion.identity; }
     }
 
+    /// <summary>
+    /// Calculates the velocity of this object based on the current position and the position last frame.
+    /// </summary>
     protected virtual void CalcVelocity() {
+        // V = (current position - last position) / length of 1 frame in seconds.
         velocity = (transform.position - _lastPosition) /Time.deltaTime;
     }
 
     protected virtual void OnCollisionEnter2D(Collision2D other) {
+        // Set the parent of the collision object to this object.
         if (standable && other.transform.CompareTag("Player") || other.transform.CompareTag("Prop")) { other.transform.parent = transform; }
     }
 
     protected virtual void OnCollisionExit2D(Collision2D other) {
+        // Reset the collision object's parent to null when they are no longer colliding.
         if (standable && other.transform.CompareTag("Player") || other.transform.CompareTag("Prop"))
         {
             other.transform.parent = null;
