@@ -610,16 +610,11 @@ public class PlayerNetwork : CharacterStateNetwork {
             float segmentTime = animationTime / 4f;
             // Create float tick that is the length of 1 frame in seconds.
             float tick = Time.deltaTime;
-<<<<<<< HEAD
 
             //Rotation Tests
             Quaternion newUp = Quaternion.Euler(0, player.transform.eulerAngles.y + 180f, player.transform.eulerAngles.z + 180f);
             //Quaternion newUp = Quaternion.Euler(0, 0, player.transform.eulerAngles.z + 180f);
             //Quaternion newUp = Quaternion.Euler(player.transform.eulerAngles.x + 180f, 0, 0);
-=======
-            // Create Quaternion new up from a euler angle: 0, 0, player's z angle + 180
-            Quaternion newUp = Quaternion.Euler(0,0,player.transform.eulerAngles.z + 180f);
->>>>>>> afdb678adf22639bbb83c015c312180466e70e2a
 
             // Loop the following for every step of stride tick where t is between 0 and segment time.
             for (float t = 0; t < segmentTime; t += tick) {
