@@ -5,6 +5,12 @@ TagManager:
   serializedVersion: 2
   tags:
   - Prop
+  - onlyTrigger
+  - 2ddl
+  - vehicle
+  - gun
+  - ghost
+  - deadTrigger
   layers:
   - Default
   - TransparentFX
@@ -17,6 +23,8 @@ TagManager:
   - Environment
   - Character
   - Prop
+  - Light Obstacles
+  - LightMesh
   - 
   - 
   - 
@@ -35,9 +43,7 @@ TagManager:
   - 
   - 
   - 
-  - light sources
-  - ambient light
-  - light obstacles
+  - 
   m_SortingLayers:
   - name: Default
     uniqueID: 0

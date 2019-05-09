@@ -91,17 +91,20 @@
 
 					//Offset pos
 					_deltaPos = new Vector2(_deltaPos.x + descentralizationMag, _deltaPos.y + descentralizationMag);
-					transform.localPosition = new Vector3(_deltaPos.x, _deltaPos.y, _initPos.z);
+					//transform.localPosition = new Vector3(_deltaPos.x, _deltaPos.y, _initPos.z);
+                    transform.localPosition = Vector3.Lerp(transform.localPosition, new Vector3(_deltaPos.x, _deltaPos.y, _initPos.z), Time.deltaTime * (1/delay));
 
-					//Color Blending
-					//_lColor = _lColor + (_deltaColor * 0.08f * Random.Range(-1,2));
-					_lColor.a = _fromColor.a + Random.Range(-1f,1f) * BrightAmount;
+                    //Color Blending
+                    //_lColor = _lColor + (_deltaColor * 0.08f * Random.Range(-1,2));
+                    _lColor.a = _fromColor.a + Random.Range(-1f,1f) * BrightAmount;
 				}
 				
 				yield return new WaitForEndOfFrame();
-				dynamicLightInstance.LightColor = _lColor;
-				dynamicLightInstance.uv_Scale = new Vector2(_initUVScale.x + rnd ,_initUVScale.y + rnd );
-				dynamicLightInstance.Refresh();
+				//dynamicLightInstance.LightColor = _lColor;
+                dynamicLightInstance.LightColor = Color.Lerp(dynamicLightInstance.LightColor, _lColor, Time.deltaTime * (1 / delay));
+                //dynamicLightInstance.uv_Scale = new Vector2(_initUVScale.x + rnd ,_initUVScale.y + rnd );
+                dynamicLightInstance.uv_Scale = Vector2.Lerp(dynamicLightInstance.uv_Scale, new Vector2(_initUVScale.x + rnd, _initUVScale.y + rnd), Time.deltaTime * (1/delay));
+                dynamicLightInstance.Refresh();
 				cycles++;
 			}
 		}

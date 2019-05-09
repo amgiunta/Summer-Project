@@ -627,6 +627,7 @@ public class PlayerNetwork : CharacterStateNetwork {
             float tick = Time.deltaTime;
             // Create float angle that is 180 / (segment time / tick)
             float angle = 180 / (segmentTime / tick);
+            float initialAngle = player.transform.eulerAngles.z;
 
 
             // Loop the following for every step of stride tick where t is between 0 and segment time.
@@ -642,9 +643,11 @@ public class PlayerNetwork : CharacterStateNetwork {
             for (float t = 0; t < segmentTime; t += tick) {
 
                 // Rotate the player around the z axis by angle
-                player.transform.Rotate(new Vector3(angle, 0, 0));
+                player.transform.Rotate(new Vector3(0, 0, angle));
                 yield return new WaitForEndOfFrame();
             }
+
+            player.transform.eulerAngles = new Vector3(0, 0, initialAngle + 180);
 
             // Set the done animating flag to true.
             doneAnimating = true;

@@ -19,8 +19,9 @@ namespace DynamicLight2D
 			
 			if(coreUtils == null)
 			{
-				coreUtils = (ScriptableObject) ScriptableObject.CreateInstance("CoreUtils");
-			}
+                //coreUtils = (ScriptableObject) ScriptableObject.CreateInstance("CoreUtils");
+                coreUtils = (ScriptableObject)ScriptableObject.CreateInstance("DynamicLight2D.CoreUtils");
+            }
 			
 			if (relativepath != null)
 			{

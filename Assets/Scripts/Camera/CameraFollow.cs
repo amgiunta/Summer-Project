@@ -36,16 +36,15 @@ public class CameraFollow : MonoBehaviour {
                 position += new Vector3(player.rigidbody.velocity.normalized.x * predictionAmount, 0f);
             }
 
-
-            transform.position = Vector3.Lerp(transform.position, position, cameraSpeed * Time.deltaTime);
         }
         else {
             //transform.forward = player.transform.forward;
-            position = player.transform.position + player.transform.TransformDirection(new Vector3(0,0,offset.z));
+            position = new Vector3(player.transform.position.x, player.transform.position.y, offset.z);
 
-            transform.position = position;
+            //transform.position = position;
         }
 
+        transform.position = Vector3.Lerp(transform.position, position, cameraSpeed * Time.deltaTime);
 
     }
 
