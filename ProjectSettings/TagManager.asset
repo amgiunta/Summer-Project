@@ -35,9 +35,9 @@ TagManager:
   - 
   - 
   - 
-  - 
-  - 
-  - 
+  - light sources
+  - ambient light
+  - light obstacles
   m_SortingLayers:
   - name: Default
     uniqueID: 0
