@@ -217,7 +217,7 @@ GameObject:
   - component: {fileID: 57735169}
   - component: {fileID: 57735168}
   - component: {fileID: 57735167}
-  m_Layer: 12
+  m_Layer: 0
   m_Name: 2DDLight (4)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -349,7 +349,7 @@ GameObject:
   - component: {fileID: 78492112}
   - component: {fileID: 78492111}
   - component: {fileID: 78492110}
-  m_Layer: 12
+  m_Layer: 0
   m_Name: 2DDLight (5)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -827,7 +827,7 @@ GameObject:
   - component: {fileID: 208046075}
   - component: {fileID: 208046074}
   - component: {fileID: 208046073}
-  m_Layer: 12
+  m_Layer: 0
   m_Name: 2DDLight
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1385,7 +1385,7 @@ GameObject:
   - component: {fileID: 419656727}
   - component: {fileID: 419656726}
   - component: {fileID: 419656725}
-  m_Layer: 12
+  m_Layer: 0
   m_Name: 2DDLight (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2745,7 +2745,7 @@ GameObject:
   - component: {fileID: 1395772895}
   - component: {fileID: 1395772894}
   - component: {fileID: 1395772893}
-  m_Layer: 12
+  m_Layer: 0
   m_Name: 2DDLight (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3194,7 +3194,7 @@ GameObject:
   - component: {fileID: 1457089588}
   - component: {fileID: 1457089587}
   - component: {fileID: 1457089586}
-  m_Layer: 12
+  m_Layer: 0
   m_Name: 2DDLight
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5333,7 +5333,7 @@ GameObject:
   - component: {fileID: 1993962737}
   - component: {fileID: 1993962736}
   - component: {fileID: 1993962735}
-  m_Layer: 12
+  m_Layer: 0
   m_Name: 2DDLight (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5675,7 +5675,7 @@ GameObject:
   - component: {fileID: 2078739242}
   - component: {fileID: 2078739241}
   - component: {fileID: 2078739240}
-  m_Layer: 12
+  m_Layer: 0
   m_Name: 2DDLight (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
