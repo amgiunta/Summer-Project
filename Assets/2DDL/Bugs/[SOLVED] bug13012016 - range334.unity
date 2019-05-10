@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -120,7 +120,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!43 &754895715
+--- !u!43 &783994952
 Mesh:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -131,14 +131,14 @@ Mesh:
   m_SubMeshes:
   - serializedVersion: 2
     firstByte: 0
-    indexCount: 0
+    indexCount: 33
     topology: 0
     baseVertex: 0
     firstVertex: 0
-    vertexCount: 0
+    vertexCount: 12
     localAABB:
-      m_Center: {x: 0, y: 0, z: 0}
-      m_Extent: {x: 0, y: 0, z: 0}
+      m_Center: {x: 0, y: 0.69544315, z: 0}
+      m_Extent: {x: 19.6651, y: 19.303795, z: 0}
   m_Shapes:
     vertices: []
     shapes: []
@@ -155,15 +155,31 @@ Mesh:
   m_KeepVertices: 1
   m_KeepIndices: 1
   m_IndexFormat: 0
-  m_IndexBuffer: 
+  m_IndexBuffer: 000001000200000002000300000003000400000004000500000005000600000006000700000007000800000008000900000009000a0000000a000b0000000b000000
   m_VertexData:
     serializedVersion: 3
-    m_VertexCount: 0
+    m_VertexCount: 12
     m_Channels:
     - stream: 0
       offset: 0
       format: 0
+      dimension: 3
+    - stream: 0
+      offset: 12
+      format: 0
+      dimension: 3
+    - stream: 0
+      offset: 0
+      format: 0
       dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 24
+      format: 0
+      dimension: 2
     - stream: 0
       offset: 0
       format: 0
@@ -200,24 +216,8 @@ Mesh:
       offset: 0
       format: 0
       dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    m_DataSize: 0
-    _typelessdata: 
+    m_DataSize: 384
+    _typelessdata: 0000000000000000000000000000000000000000000080bf0000003f0000003f8e8feac0e8dd94c1000000000000000000000000000080bffa2ca23e33810e3d599c8cc1dbb018c1000000000000000000000000ffff7fbfc02e783dead8853e20529dc1e6426940000000000000000000000000000080bfcd2c093c7d53173f8a8b4bc17beb7641000000000000000000000000000080bff0533a3e98c4623f2cb932be71fe9f41000000000000000000000000000080bf16c4fd3ec1fe7f3f868b4b417eeb7641000000000000000000000000000080bf026b513f99c4623f20529d4102436940000000000000000000000000ffff7fbf4ddb7d3f8053173f5c9c8c41d4b018c1000000000000000000000000ffff7fbf167d703ff0d8853eafd40741e1de90c1000000000000000000000000000080bf1355363ff3a7413d16eb314058c2bdc0000000000000000000000000000080bfb5ca113faa18b43e157f154069c2bdc0000000000000000000000000000080bf1cf30e3fa318b43e
   m_CompressedMesh:
     m_Vertices:
       m_NumItems: 0
@@ -272,7 +272,7 @@ Mesh:
     m_UVInfo: 0
   m_LocalAABB:
     m_Center: {x: 0, y: 0, z: 0}
-    m_Extent: {x: 0, y: 0, z: 0}
+    m_Extent: {x: 19.6651, y: 19.303795, z: 0}
   m_MeshUsageFlags: 0
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
@@ -442,7 +442,7 @@ MonoBehaviour:
   uv_Offset: {x: 0.5, y: 0.5}
   uv_Scale: {x: 0.5, y: 0.5}
   vertexWorking: 0
-  RangeAngle: 334
+  RangeAngle: 317
   staticScene: 1
   doNotRenderMesh: 0
   lastLight2DType: 0
@@ -475,7 +475,7 @@ MeshRenderer:
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
   m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
+  m_SelectedEditorRenderState: 0
   m_MinimumChartSize: 4
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
@@ -490,7 +490,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 970259492}
-  m_Mesh: {fileID: 754895715}
+  m_Mesh: {fileID: 783994952}
 --- !u!4 &970259496
 Transform:
   m_ObjectHideFlags: 0

@@ -10,43 +10,41 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: af7181f404f1447c0a7a17b3070b952b, type: 3}
-  m_Name: Sprite Shape
+  m_Name: Shape
   m_EditorClassIdentifier: 
   m_Angles:
   - m_Start: -45
     m_End: 45
     m_Order: 4
     m_Sprites:
-    - {fileID: 2622811761301429628, guid: fa03b183f45273b489cd4d0501646d3a, type: 3}
-  - m_Start: 45
-    m_End: 134
-    m_Order: 3
-    m_Sprites:
-    - {fileID: -5513757222825561392, guid: fa03b183f45273b489cd4d0501646d3a, type: 3}
-  - m_Start: 134
-    m_End: 225
-    m_Order: 2
-    m_Sprites:
-    - {fileID: -2940350978635664056, guid: fa03b183f45273b489cd4d0501646d3a, type: 3}
+    - {fileID: 0}
   - m_Start: -135
     m_End: -45
+    m_Order: 3
+    m_Sprites: []
+  - m_Start: 135
+    m_End: 225
+    m_Order: 2
+    m_Sprites: []
+  - m_Start: 45
+    m_End: 135
     m_Order: 1
     m_Sprites:
-    - {fileID: 1114605020994775884, guid: fa03b183f45273b489cd4d0501646d3a, type: 3}
-  m_FillTexture: {fileID: 2800000, guid: e8c26f116d4c7eb4cac0986718502463, type: 3}
+    - {fileID: 0}
+  m_FillTexture: {fileID: 2800000, guid: 86469f4715be9b242ad32115641aadd7, type: 3}
   m_CornerSprites:
   - m_CornerType: 0
     m_Sprites:
-    - {fileID: -5482475529079921882, guid: 94e62e620eebc3843bcbc8b2584376f0, type: 3}
+    - {fileID: 0}
   - m_CornerType: 1
     m_Sprites:
-    - {fileID: 1551141769308705370, guid: 94e62e620eebc3843bcbc8b2584376f0, type: 3}
+    - {fileID: 0}
   - m_CornerType: 2
     m_Sprites:
-    - {fileID: -5567420432609287487, guid: 94e62e620eebc3843bcbc8b2584376f0, type: 3}
+    - {fileID: 0}
   - m_CornerType: 3
     m_Sprites:
-    - {fileID: -5457292179521927234, guid: 94e62e620eebc3843bcbc8b2584376f0, type: 3}
+    - {fileID: 0}
   - m_CornerType: 4
     m_Sprites:
     - {fileID: 0}
