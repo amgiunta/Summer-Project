@@ -24,8 +24,8 @@ TagManager:
   - Character
   - Prop
   - Light Obstacles
-  - 
-  - 
+  - Light Sources
+  - PostProcessing
   - 
   - 
   - 
@@ -47,4 +47,16 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Background
+    uniqueID: 1423505001
+    locked: 0
+  - name: Prop
+    uniqueID: 373139363
+    locked: 0
+  - name: Character
+    uniqueID: 3793918459
+    locked: 0
+  - name: Foreground
+    uniqueID: 4202719627
     locked: 0

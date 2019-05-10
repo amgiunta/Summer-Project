@@ -117,7 +117,7 @@ public class FloorButton : Trigger {
     private void OnCollisionEnter2D(Collision2D other)
     {
         // If the tag of the colliding object is "Prop" or "Player",
-        if (other.transform.CompareTag("Prop") || other.transform.CompareTag("Player"))
+        if (other.transform.CompareTag("Prop"))
         {
             // Create Rigidbody2D body that is the rigidbody attached to the colliding object.
             Rigidbody2D body = other.gameObject.GetComponent<Rigidbody2D>();
@@ -127,21 +127,21 @@ public class FloorButton : Trigger {
             // Try to toggle the button.
             ToggleButton();
         }
-        /*
+        
         else if (other.transform.CompareTag("Player") && playerCanTrigger) {
             Rigidbody2D body = other.gameObject.GetComponent<Rigidbody2D>();
             AddBody(body);
 
             ToggleButton();
         }
-        */
+        
         
     }
 
     private void OnCollisionExit2D(Collision2D other)
     {
         // If the tag of the colliding object is "Prop" or "Player",
-        if (other.transform.CompareTag("Prop") || other.transform.CompareTag("Player"))
+        if (other.transform.CompareTag("Prop"))
         {
             // Create Rigidbody2D body that is the rigidbody attached to the colliding object.
             Rigidbody2D body = other.gameObject.GetComponent<Rigidbody2D>();
@@ -151,7 +151,7 @@ public class FloorButton : Trigger {
             // Try to toggle the button.
             ToggleButton();
         }
-        /*
+        
         else if (other.transform.CompareTag("Player") && playerCanTrigger)
         {
             Rigidbody2D body = other.gameObject.GetComponent<Rigidbody2D>();
@@ -159,6 +159,6 @@ public class FloorButton : Trigger {
 
             ToggleButton();
         }
-        */
+        
     }
 }
