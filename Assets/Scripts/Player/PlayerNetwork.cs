@@ -419,7 +419,9 @@ public class PlayerNetwork : CharacterStateNetwork {
             Vector2 movement = new Vector2(Input.GetAxis("Horizontal"), 0);
 
             // Add movement * the local rotation of the player * the player's speed as a force to the player.
-            player.rigidbody.AddForce(player.transform.localRotation * movement * player.speed);
+            //player.rigidbody.AddForce(player.transform.localRotation * movement * player.speed);
+
+            player.rigidbody.velocity = new Vector2((player.transform.localRotation * movement).x * player.speed, player.rigidbody.velocity.y);
 
 
             if (movement.x > 0) {
@@ -484,7 +486,7 @@ public class PlayerNetwork : CharacterStateNetwork {
             Vector2 movement = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
 
             // Add movement * player's local rotation * player strafe speed as a force on the player.
-            player.rigidbody.AddForce(player.transform.localRotation * movement * player.strafeSpeed);
+            player.rigidbody.velocity = new Vector2((player.transform.localRotation * movement).x * player.speed, player.rigidbody.velocity.y);
 
             if (movement.x > 0) { player.transform.localScale = new Vector3(Mathf.Abs(player.transform.localScale.x), player.transform.localScale.y, player.transform.localScale.z); }
             else if (movement.x < 0) { player.transform.localScale = new Vector3(-Mathf.Abs(player.transform.localScale.x), player.transform.localScale.y, player.transform.localScale.z); }
@@ -519,7 +521,7 @@ public class PlayerNetwork : CharacterStateNetwork {
             Vector2 movement = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
 
             // Add movement * player's local rotation * player strafe speed as a force on the player.
-            player.rigidbody.AddForce(player.transform.localRotation * movement * player.strafeSpeed);
+            player.rigidbody.velocity = new Vector2((player.transform.localRotation * movement).x * player.speed, player.rigidbody.velocity.y);
 
             if (movement.x > 0) { player.transform.localScale = new Vector3(Mathf.Abs(player.transform.localScale.x), player.transform.localScale.y, player.transform.localScale.z); }
             else if (movement.x < 0) { player.transform.localScale = new Vector3(-Mathf.Abs(player.transform.localScale.x), player.transform.localScale.y, player.transform.localScale.z); }
@@ -548,7 +550,7 @@ public class PlayerNetwork : CharacterStateNetwork {
             Vector2 movement = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
 
             // Add movement * player's local rotation * player strafe speed as a force on the player.
-            player.rigidbody.AddForce(player.transform.localRotation * movement * player.strafeSpeed);
+            player.rigidbody.velocity = new Vector2((player.transform.localRotation * movement).x * player.speed, player.rigidbody.velocity.y);
 
             if (movement.x > 0) { player.transform.localScale = new Vector3(Mathf.Abs(player.transform.localScale.x), player.transform.localScale.y, player.transform.localScale.z); }
             else if (movement.x < 0) { player.transform.localScale = new Vector3(-Mathf.Abs(player.transform.localScale.x), player.transform.localScale.y, player.transform.localScale.z); }

@@ -7,10 +7,9 @@ public class CameraFollow : MonoBehaviour {
     public Transform target;
     public PlayerNetwork player;
     public Vector3 offset;
-    public float predictionAmount;
+    public Vector2 predictionAmount;
 
     public float cameraSpeed;
-    public float rotationSpeed;
     public bool prediction;
 
 	// Use this for initialization
@@ -33,7 +32,9 @@ public class CameraFollow : MonoBehaviour {
             position = player.GetFlipPivot(offset);
             if (prediction && player)
             {
-                position += new Vector3(player.rigidbody.velocity.normalized.x * predictionAmount, 0f);
+                Vector2 velocity = player.rigidbody.velocity;
+                velocity.Scale(predictionAmount);
+                position += (Vector3) velocity;
             }
 
         }
