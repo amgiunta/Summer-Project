@@ -18,13 +18,13 @@ public class CameraFollow : MonoBehaviour {
 	}
 	
 	// Update is called once per frame
-	void Update () {
+	void FixedUpdate () {
         if (!player) { FindPlayer(); }
 
         MoveCamera();
 	}
 
-    void MoveCamera(out Vector3 position) {
+    public void MoveCamera(out Vector3 position) {
         if (player) { transform.localRotation = player.transform.localRotation; }
 
         if (!player.flipping)
@@ -49,7 +49,7 @@ public class CameraFollow : MonoBehaviour {
 
     }
 
-    void MoveCamera() {
+    public void MoveCamera() {
         Vector3 position;
         MoveCamera(out position);
     }

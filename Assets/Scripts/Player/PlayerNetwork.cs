@@ -50,7 +50,7 @@ public class PlayerNetwork : CharacterStateNetwork {
 
     new public Rigidbody2D rigidbody;
     new public Collider2D collider;
-    Camera mainCamera;
+    public CameraFollow mainCamera;
 
     /// <summary>
     /// A reference to the hand of the player.
@@ -70,7 +70,7 @@ public class PlayerNetwork : CharacterStateNetwork {
     {
         rigidbody = GetComponent<Rigidbody2D>();
         collider = GetComponent<Collider2D>();
-        mainCamera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
+        mainCamera = FindObjectOfType<CameraFollow>();
         hand = transform.Find("Hand");
 
         if (!hand) { Debug.LogError("No hand on player detected! Make sure there is a 'Hand' child under the player, and name it accordingly."); }
@@ -636,6 +636,7 @@ public class PlayerNetwork : CharacterStateNetwork {
             for (float t = 0; t < segmentTime; t += tick) {
                 // Set the position of the player to the linear interpolation at point t on the line between the position of the player and the target position.
                 player.transform.position = Vector2.Lerp(player.transform.position, targetPosition, t);
+                player.mainCamera.MoveCamera();
                 yield return new WaitForEndOfFrame();
             }
             // Set the player's position to the target position.
@@ -646,6 +647,7 @@ public class PlayerNetwork : CharacterStateNetwork {
 
                 // Rotate the player around the z axis by angle
                 player.transform.Rotate(new Vector3(0, 0, angle));
+                player.mainCamera.MoveCamera();
                 yield return new WaitForEndOfFrame();
             }
 
