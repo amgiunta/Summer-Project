@@ -146,6 +146,8 @@ public class PlayerNetwork : CharacterStateNetwork {
     /// </summary>
     protected virtual void ApplyGravity()
     {
+        transform.up = Vector3.Lerp(transform.up, CalculateNormal(), Time.deltaTime * 5f);
+
         // Create Vector direction that is the negative relative up vector
         Vector3 direction = -transform.up;
         // Multiply the direction by: the negative force of gravity multiplied by the mass of this object.
@@ -329,6 +331,27 @@ public class PlayerNetwork : CharacterStateNetwork {
         else { isGrounded = false; }
     }
 
+    private Vector3 CalculateNormal() {
+        Vector3 position = new Vector3();
+        return CalculateNormal(out position);
+    }
+
+    private Vector3 CalculateNormal(out Vector3 position)
+    {
+        Vector3 offset = new Vector3(0, 0.5f, 0);
+        offset.Scale(transform.up);
+        RaycastHit2D hit = Physics2D.CircleCast(transform.position + offset, transform.lossyScale.x / 4, -transform.up, 12f, (1 << LayerMask.NameToLayer("Environment")));
+        if (hit)
+        {
+            position = hit.point;
+            return hit.normal;
+        }
+        else {
+            position = transform.position;
+            return transform.up;
+        }
+    }
+
     /// <summary>
     /// Cap the player's velocity so that the magnitude is never greater than the maximum speed.
     /// </summary>
@@ -355,11 +378,20 @@ public class PlayerNetwork : CharacterStateNetwork {
     {
         Gizmos.color = Color.yellow;
         if (!collider) { collider = GetComponent<Collider2D>(); }
+        if (!rigidbody) { rigidbody = GetComponent<Rigidbody2D>(); }
 
         Gizmos.DrawWireSphere(GetFlipPivot(flipOffset), GetFlipRadius());
         Gizmos.DrawWireSphere(transform.position, maxReach);
         Gizmos.color = Color.blue;
         Gizmos.DrawWireCube(transform.position, new Vector2(transform.localScale.x / 2, 0.2f));
+        Gizmos.color = Color.red;
+        Vector3 groundPosition;
+        Vector3 normal = CalculateNormal(out groundPosition);
+        Gizmos.DrawWireSphere(groundPosition, transform.lossyScale.x / 4f);
+        Debug.DrawRay(groundPosition, normal, Color.red);
+
+        if (!Application.isPlaying)
+            transform.up = Vector3.Lerp(transform.up, normal, Time.deltaTime * 5f);
 
         if (Application.isPlaying) { Debug.DrawRay(transform.position, rigidbody.velocity, Color.red); }
 
@@ -372,6 +404,11 @@ public class PlayerNetwork : CharacterStateNetwork {
     /// <returns></returns>
     public Vector3 LocalVelocity() {
         return transform.InverseTransformDirection(rigidbody.velocity);
+    }
+
+    public void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.CompareTag("Danger")) { GameMaster.gameMaster.RestartLevel(); }
     }
 
     #region State Definitions
@@ -421,7 +458,10 @@ public class PlayerNetwork : CharacterStateNetwork {
             // Add movement * the local rotation of the player * the player's speed as a force to the player.
             //player.rigidbody.AddForce(player.transform.localRotation * movement * player.speed);
 
-            player.rigidbody.velocity = new Vector2((player.transform.localRotation * movement).x * player.speed, player.rigidbody.velocity.y);
+            //player.rigidbody.velocity = new Vector2((player.transform.localRotation * movement).x * player.speed, player.rigidbody.velocity.y);
+            movement *= player.speed;
+            movement.Scale(player.transform.right);
+            player.rigidbody.velocity = movement;
 
 
             if (movement.x > 0) {

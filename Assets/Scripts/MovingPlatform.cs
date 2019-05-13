@@ -68,7 +68,7 @@ public class MovingPlatform : DynamicPlatform {
         if (continuous) { movePlatform = true; }
 
         // Should the platform move, and it's not already moving, move the platform.
-        if (movePlatform && !isMoving) { StartCoroutine(MoveEnumerator()); }
+        if (movePlatform && !isMoving) { StartCoroutine(MoveToPoint(GetNextPoint())); }
         // Call the base Fixed update.
         base.FixedUpdate();
     }
@@ -79,6 +79,11 @@ public class MovingPlatform : DynamicPlatform {
     public virtual void ActivatePlatform() {
         // Set move platform flag to true.
         movePlatform = true;
+    }
+
+    public virtual void MoveToPoint(int pointIndex) {
+        if (!isMoving)
+            StartCoroutine(MoveToPoint(pathPoints[pointIndex]));
     }
 
     /// <summary>
@@ -121,6 +126,7 @@ public class MovingPlatform : DynamicPlatform {
     /// Asynchronous function to move the platform to a location over time.
     /// </summary>
     /// <returns>An enumerator</returns>
+    [System.Obsolete("Use 'IEnumerator MoveToPoint(int)' instead.")]
     protected virtual IEnumerator MoveEnumerator() {
         // Set move platform flag to false.
         movePlatform = false;
@@ -152,6 +158,40 @@ public class MovingPlatform : DynamicPlatform {
         transform.position = nextPoint.position;
         // Set the current path point to the next point.
         currentPathPoint = nextPoint;
+        // Set the movement flag to false.
+        isMoving = false;
+    }
+
+    IEnumerator MoveToPoint(Transform point) {
+        // Set move platform flag to false.
+        movePlatform = false;
+        // Set the movement flag to true.
+        isMoving = true;
+        // Wait for the delay time.
+        yield return new WaitForSeconds(delay);
+        // Create 3D point that is the poition of this object
+        Vector3 startPos = transform.position;
+        // Create float that is the distance between this object and the position of the next point
+        float distance = Vector2.Distance(transform.position, point.position);
+        // Create float time that is the duration of the algorythm: calculated from t = d/v where d = distance, v = speed.
+        float time = distance / speed;
+
+        // Loop the following for every step of stride of one frame in seconds between t = 0 and the value for time.
+        for (float t = 0; t <= time; t += Time.deltaTime)
+        {
+            // Create float percent that is the percent of t over time.
+            float percent = t / time;
+
+            // Set the position of this object to: the linear interpolation of percent on line between startPos and the position of next point.
+            transform.position = Vector3.Lerp(startPos, point.position, percent);
+            // Wait for the duration of 1 frame.
+            yield return new WaitForEndOfFrame();
+        }
+
+        // Set the position of this object to the position of next point
+        transform.position = point.position;
+        // Set the current path point to the next point.
+        currentPathPoint = point;
         // Set the movement flag to false.
         isMoving = false;
     }

@@ -52,6 +52,7 @@ public abstract class CharacterState {
         Debug.LogError("Could not find transition to state '" + to.name + "' from state '" + name + "'");
     }
     public static implicit operator bool(CharacterState state) {
+        if (state == null) { return false; }
         if (state.network != null)
         {
             return (!object.ReferenceEquals(state, null) && state.network.activeState == state);

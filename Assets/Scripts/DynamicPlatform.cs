@@ -6,13 +6,13 @@ using UnityEngine;
 /// Basic component for non-static platforms that can move at runtime and react to the player.
 /// </summary>
 [RequireComponent(typeof(Rigidbody2D))]
-[RequireComponent(typeof(Collider2D))]
 public class DynamicPlatform : MonoBehaviour {
-
+    public bool useGravity;
+    public bool rotate;
+    public float rotationSpeed;
     /// <summary>
     /// Align the rotation of this platform to the rotation of the player.
     /// </summary>
-    [Tooltip("Align the rotation of this platform to the rotation of the player.")]
     public bool orientWithPlayer;
     [Tooltip("Friction value for this platform.")]
     public float friction;
@@ -27,11 +27,6 @@ public class DynamicPlatform : MonoBehaviour {
     /// </summary>
     [HideInInspector]
     new public Rigidbody2D rigidbody;
-    /// <summary>
-    /// The collider attached to this object.
-    /// </summary>
-    [HideInInspector]
-    new public Collider2D collider;
     /// <summary>
     /// CAn the player stand on this object?
     /// </summary>
@@ -48,24 +43,42 @@ public class DynamicPlatform : MonoBehaviour {
     /// </summary>
     private Vector3 _lastPosition;
 
+    private Vector3 _gravityDirection = -Vector3.up;
+
+    private Quaternion _absoluteRotation = Quaternion.identity;
+
 	// Use this for initialization
 	void Start () {
         // Find the player and store a reference to it.
         FindPlayer();
         // Get the rigidbody on this object.
         rigidbody = GetComponent<Rigidbody2D>();
-        // Get the collider on this object
-        collider = GetComponent<Collider2D>();
 	}
-	
-	// Update is called once per frame
-	public virtual void FixedUpdate () {
+
+    private void Update()
+    {
+        Orient();
+    }
+
+    // Update is called once per frame
+    public virtual void FixedUpdate () {
         // Calculate the velocity of this object and store it.
         CalcVelocity();
+        ApplyGravity();
 
         // Last position is the current position.
         _lastPosition = transform.position;
 	}
+
+    public void OrientWithPlayer(bool value) {
+        orientWithPlayer = value;
+    }
+
+    public void Orientation(float angle) {
+        _absoluteRotation = Quaternion.Euler(0, 0, angle);
+
+        Debug.Log("Changed the orientation to " + angle);
+    }
 
     /// <summary>
     /// Find the current acting player in the scene and store it in this object.
@@ -85,10 +98,26 @@ public class DynamicPlatform : MonoBehaviour {
         // If player is not null and orientWithPlayer is true, set this object's rotation to the player's rotation.
         if (orientWithPlayer && player)
         {
-            transform.localRotation = player.transform.localRotation;
+            _gravityDirection = -player.transform.up;
+
+            if (rotate)
+            {
+                Quaternion targetRotation = _absoluteRotation * player.transform.localRotation;
+                transform.localRotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
+            }
         }
         // If not, set this object's rotation to be the identity.
-        else { transform.localRotation = Quaternion.identity; }
+        else {
+            _gravityDirection = -Vector3.up;
+            transform.localRotation = Quaternion.Lerp(transform.rotation, _absoluteRotation, Time.deltaTime * rotationSpeed);
+        }
+    }
+
+    protected virtual void ApplyGravity() {
+        if (!useGravity) { return; }
+
+        rigidbody.AddForce(_gravityDirection * rigidbody.mass);
+        Debug.DrawRay(transform.position, _gravityDirection * rigidbody.mass, Color.red);
     }
 
     /// <summary>
