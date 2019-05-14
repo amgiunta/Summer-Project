@@ -52,6 +52,9 @@ public class PlayerNetwork : CharacterStateNetwork {
     new public Collider2D collider;
     public CameraFollow mainCamera;
 
+    Vector2 _lastNormal;
+    Vector2 _lastNormalPosition;
+
     /// <summary>
     /// A reference to the hand of the player.
     /// </summary>
@@ -71,7 +74,7 @@ public class PlayerNetwork : CharacterStateNetwork {
         rigidbody = GetComponent<Rigidbody2D>();
         collider = GetComponent<Collider2D>();
         mainCamera = FindObjectOfType<CameraFollow>();
-        hand = transform.Find("Hand");
+        hand = transform.Find("Sprite").Find("Hand");
 
         if (!hand) { Debug.LogError("No hand on player detected! Make sure there is a 'Hand' child under the player, and name it accordingly."); }
 
@@ -141,12 +144,19 @@ public class PlayerNetwork : CharacterStateNetwork {
         //Debug.Log("The active state is: " + activeState.name);
     }
 
+    private void Flip() {
+        float direction = Input.GetAxis("Horizontal") > 0 ? 1 : -1;
+
+        transform.Find("Sprite").localScale = new Vector3(direction, transform.Find("Sprite").localScale.y, transform.Find("Sprite").localScale.z);
+    }
+
     /// <summary>
     /// Apply to force of gravity along the relative up vector.
     /// </summary>
     protected virtual void ApplyGravity()
     {
-        transform.up = Vector3.Lerp(transform.up, CalculateNormal(), Time.deltaTime * 5f);
+        //transform.up = Vector3.Lerp(transform.up, CalculateNormal(), Time.deltaTime * 5f);
+        transform.rotation = Quaternion.LookRotation(transform.forward, CalculateNormal().normal);
 
         // Create Vector direction that is the negative relative up vector
         Vector3 direction = -transform.up;
@@ -331,25 +341,21 @@ public class PlayerNetwork : CharacterStateNetwork {
         else { isGrounded = false; }
     }
 
-    private Vector3 CalculateNormal() {
-        Vector3 position = new Vector3();
-        return CalculateNormal(out position);
-    }
-
-    private Vector3 CalculateNormal(out Vector3 position)
+    private RaycastHit2D CalculateNormal()
     {
-        Vector3 offset = new Vector3(0, 0.5f, 0);
+        Vector3 offset = new Vector3(0, 0.25f, 0);
         offset.Scale(transform.up);
-        RaycastHit2D hit = Physics2D.CircleCast(transform.position + offset, transform.lossyScale.x / 4, -transform.up, 12f, (1 << LayerMask.NameToLayer("Environment")));
-        if (hit)
-        {
-            position = hit.point;
-            return hit.normal;
-        }
-        else {
-            position = transform.position;
-            return transform.up;
-        }
+        RaycastHit2D hit = Physics2D.CircleCast(transform.position + offset, transform.lossyScale.x / 4, -transform.up, 6f, (1 << LayerMask.NameToLayer("Environment")));
+
+        hit.normal = hit ? (Vector3)hit.normal : transform.up;
+        hit.point = hit ? (Vector3)hit.point : transform.position - (-transform.up * 6f);
+
+        if ((hit.point - _lastNormalPosition).sqrMagnitude < 0.001f) { hit.normal = _lastNormal; }
+
+        _lastNormal = hit.normal;
+        _lastNormalPosition = hit.point;
+
+        return hit;
     }
 
     /// <summary>
@@ -385,13 +391,13 @@ public class PlayerNetwork : CharacterStateNetwork {
         Gizmos.color = Color.blue;
         Gizmos.DrawWireCube(transform.position, new Vector2(transform.localScale.x / 2, 0.2f));
         Gizmos.color = Color.red;
-        Vector3 groundPosition;
-        Vector3 normal = CalculateNormal(out groundPosition);
-        Gizmos.DrawWireSphere(groundPosition, transform.lossyScale.x / 4f);
-        Debug.DrawRay(groundPosition, normal, Color.red);
+        RaycastHit2D hitPoint = CalculateNormal();
+
+        Gizmos.DrawWireSphere(hitPoint.point, transform.lossyScale.x / 4f);
+        Debug.DrawRay(hitPoint.point, hitPoint.normal, Color.red);
 
         if (!Application.isPlaying)
-            transform.up = Vector3.Lerp(transform.up, normal, Time.deltaTime * 5f);
+            transform.up = Vector3.Lerp(transform.up, hitPoint.normal, Time.deltaTime * 5f);
 
         if (Application.isPlaying) { Debug.DrawRay(transform.position, rigidbody.velocity, Color.red); }
 
@@ -464,12 +470,7 @@ public class PlayerNetwork : CharacterStateNetwork {
             player.rigidbody.velocity = movement;
 
 
-            if (movement.x > 0) {
-                player.transform.localScale = new Vector3(Mathf.Abs(player.transform.localScale.x), player.transform.localScale.y, player.transform.localScale.z);
-            }
-            else if (movement.x < 0) {
-                player.transform.localScale = new Vector3(-Mathf.Abs(player.transform.localScale.x), player.transform.localScale.y, player.transform.localScale.z);
-            }
+            player.Flip();
         }
     }
     /// <summary>
@@ -528,8 +529,7 @@ public class PlayerNetwork : CharacterStateNetwork {
             // Add movement * player's local rotation * player strafe speed as a force on the player.
             player.rigidbody.velocity = new Vector2((player.transform.localRotation * movement).x * player.speed, player.rigidbody.velocity.y);
 
-            if (movement.x > 0) { player.transform.localScale = new Vector3(Mathf.Abs(player.transform.localScale.x), player.transform.localScale.y, player.transform.localScale.z); }
-            else if (movement.x < 0) { player.transform.localScale = new Vector3(-Mathf.Abs(player.transform.localScale.x), player.transform.localScale.y, player.transform.localScale.z); }
+            player.Flip();
         }
 
         public override void OnStateExit()
@@ -563,8 +563,7 @@ public class PlayerNetwork : CharacterStateNetwork {
             // Add movement * player's local rotation * player strafe speed as a force on the player.
             player.rigidbody.velocity = new Vector2((player.transform.localRotation * movement).x * player.speed, player.rigidbody.velocity.y);
 
-            if (movement.x > 0) { player.transform.localScale = new Vector3(Mathf.Abs(player.transform.localScale.x), player.transform.localScale.y, player.transform.localScale.z); }
-            else if (movement.x < 0) { player.transform.localScale = new Vector3(-Mathf.Abs(player.transform.localScale.x), player.transform.localScale.y, player.transform.localScale.z); }
+            player.Flip();
         }
     }
     /// <summary>
@@ -592,8 +591,7 @@ public class PlayerNetwork : CharacterStateNetwork {
             // Add movement * player's local rotation * player strafe speed as a force on the player.
             player.rigidbody.velocity = new Vector2((player.transform.localRotation * movement).x * player.speed, player.rigidbody.velocity.y);
 
-            if (movement.x > 0) { player.transform.localScale = new Vector3(Mathf.Abs(player.transform.localScale.x), player.transform.localScale.y, player.transform.localScale.z); }
-            else if (movement.x < 0) { player.transform.localScale = new Vector3(-Mathf.Abs(player.transform.localScale.x), player.transform.localScale.y, player.transform.localScale.z); }
+            player.Flip();
         }
     }
     /// <summary>
@@ -682,16 +680,17 @@ public class PlayerNetwork : CharacterStateNetwork {
             // Set the player's position to the target position.
             player.transform.position = targetPosition;
 
+            Quaternion targetRotation = Quaternion.LookRotation(Vector3.forward, -player.transform.up);
             // Loop the following for every step of stride tick where t is between 0 and segment time.
             for (float t = 0; t < segmentTime; t += tick) {
 
                 // Rotate the player around the z axis by angle
-                player.transform.Rotate(new Vector3(0, 0, angle));
+                player.transform.rotation = Quaternion.Lerp(player.transform.rotation, targetRotation, t);
                 player.mainCamera.MoveCamera();
                 yield return new WaitForEndOfFrame();
             }
 
-            player.transform.eulerAngles = new Vector3(0, 0, initialAngle + 180);
+            player.transform.rotation = targetRotation;
 
             // Set the done animating flag to true.
             doneAnimating = true;
