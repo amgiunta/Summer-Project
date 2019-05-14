@@ -9,6 +9,8 @@ using UnityEngine.SceneManagement;
 public class GameMaster : MonoBehaviour {
     // The current working Game Master instance.
     public static GameMaster gameMaster;
+
+    public Vector3 relativeGravityDirection = Vector3.down;
     
     private void Awake()
     {
@@ -31,6 +33,10 @@ public class GameMaster : MonoBehaviour {
 
         // Change the scene asynchronously.
         StartCoroutine(LevelChangeTransition(buildIndex, 1f));
+    }
+
+    public void ChangeRelativeGravity(Vector3 newGravity) {
+        relativeGravityDirection = newGravity.normalized;
     }
 
     /// <summary>
