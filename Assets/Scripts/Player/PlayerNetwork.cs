@@ -8,6 +8,7 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(Collider2D))]
 public class PlayerNetwork : CharacterStateNetwork {
+    public float gravityScale;
     [Tooltip("Movement speed on the ground (m/s)")]
     public float speed;
     [Tooltip("Movement speed while in air (m/s)")]
@@ -150,20 +151,33 @@ public class PlayerNetwork : CharacterStateNetwork {
         transform.Find("Sprite").localScale = new Vector3(direction, transform.Find("Sprite").localScale.y, transform.Find("Sprite").localScale.z);
     }
 
+    protected void Move(Vector2 movementDirection, float speed) {
+        rigidbody.AddRelativeForce(movementDirection * speed);
+    }
+
     /// <summary>
     /// Apply to force of gravity along the relative up vector.
     /// </summary>
     protected virtual void ApplyGravity()
     {
-        //transform.up = Vector3.Lerp(transform.up, CalculateNormal(), Time.deltaTime * 5f);
-        transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(transform.forward, CalculateNormal().normal), 5f * Time.deltaTime);
+        RaycastHit2D point = CalculateNormal();
+        Vector2 normal = point.normal;
+        Quaternion pointRotation = Quaternion.Euler(0, 0, point.transform.eulerAngles.z);
+
+        transform.up = normal;
+        //transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Vector3.forward, normal), 5f * Time.deltaTime);
+        //transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(Vector3.forward, normal), 5f * Time.deltaTime);
+        rigidbody.MoveRotation(Quaternion.LookRotation(Vector3.forward, normal));
 
         // Create Vector direction that is the negative relative up vector
-        Vector3 direction = -transform.up;
+        Vector3 direction = -normal;
         // Multiply the direction by: the negative force of gravity multiplied by the mass of this object.
         direction *= (-Physics2D.gravity.y * rigidbody.mass);
         // Add direction to this object as a force.
-        rigidbody.AddForce(direction);
+        if (Application.isPlaying)
+            rigidbody.AddForce(direction * gravityScale);
+
+        Debug.DrawRay(transform.position, direction * gravityScale, Color.red);
     }
 
     /// <summary>
@@ -347,6 +361,8 @@ public class PlayerNetwork : CharacterStateNetwork {
         offset.Scale(transform.up);
         RaycastHit2D hit = Physics2D.CircleCast(transform.position + offset, transform.lossyScale.x / 4, -transform.up, 6f, (1 << LayerMask.NameToLayer("Environment")));
 
+        Debug.DrawRay(transform.position + offset, -transform.up, Color.yellow);
+
         hit.normal = hit ? (Vector3)hit.normal : transform.up;
         hit.point = hit ? (Vector3)hit.point : transform.position - (-transform.up * 6f);
 
@@ -396,10 +412,9 @@ public class PlayerNetwork : CharacterStateNetwork {
         Gizmos.DrawWireSphere(hitPoint.point, transform.lossyScale.x / 4f);
         Debug.DrawRay(hitPoint.point, hitPoint.normal, Color.red);
 
-        if (!Application.isPlaying)
-            transform.up = Vector3.Lerp(transform.up, hitPoint.normal, Time.deltaTime * 5f);
+        ApplyGravity();
 
-        if (Application.isPlaying) { Debug.DrawRay(transform.position, rigidbody.velocity, Color.red); }
+        //if (Application.isPlaying) { Debug.DrawRay(transform.position, rigidbody.velocity, Color.red); }
 
         Debug.DrawRay(transform.position, transform.up, Color.blue);
     }
@@ -465,10 +480,11 @@ public class PlayerNetwork : CharacterStateNetwork {
             //player.rigidbody.AddForce(player.transform.localRotation * movement * player.speed);
 
             //player.rigidbody.velocity = new Vector2((player.transform.localRotation * movement).x * player.speed, player.rigidbody.velocity.y);
-            movement *= player.speed;
-            movement.Scale(player.transform.right);
-            player.rigidbody.velocity = movement;
+            //movement *= player.speed;
+            //movement.Scale(player.transform.right);
+            //player.rigidbody.velocity = movement;
 
+            player.Move(movement, player.speed);
 
             player.Flip();
         }
@@ -527,7 +543,9 @@ public class PlayerNetwork : CharacterStateNetwork {
             Vector2 movement = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
 
             // Add movement * player's local rotation * player strafe speed as a force on the player.
-            player.rigidbody.velocity = new Vector2((player.transform.localRotation * movement).x * player.speed, player.rigidbody.velocity.y);
+            //player.rigidbody.velocity = new Vector2((player.transform.localRotation * movement).x * player.speed, player.rigidbody.velocity.y);
+
+            player.Move(movement, player.strafeSpeed);
 
             player.Flip();
         }
@@ -561,7 +579,9 @@ public class PlayerNetwork : CharacterStateNetwork {
             Vector2 movement = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
 
             // Add movement * player's local rotation * player strafe speed as a force on the player.
-            player.rigidbody.velocity = new Vector2((player.transform.localRotation * movement).x * player.speed, player.rigidbody.velocity.y);
+            //player.rigidbody.velocity = new Vector2((player.transform.localRotation * movement).x * player.speed, player.rigidbody.velocity.y);
+
+            player.Move(movement, player.strafeSpeed);
 
             player.Flip();
         }
@@ -589,7 +609,9 @@ public class PlayerNetwork : CharacterStateNetwork {
             Vector2 movement = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
 
             // Add movement * player's local rotation * player strafe speed as a force on the player.
-            player.rigidbody.velocity = new Vector2((player.transform.localRotation * movement).x * player.speed, player.rigidbody.velocity.y);
+            //player.rigidbody.velocity = new Vector2((player.transform.localRotation * movement).x * player.speed, player.rigidbody.velocity.y);
+
+            player.Move(movement, player.strafeSpeed);
 
             player.Flip();
         }

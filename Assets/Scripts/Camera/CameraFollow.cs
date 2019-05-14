@@ -10,6 +10,7 @@ public class CameraFollow : MonoBehaviour {
     public Vector2 predictionAmount;
 
     public float cameraSpeed;
+    public float rotationSpeed;
     public bool prediction;
 
 	// Use this for initialization
@@ -25,7 +26,9 @@ public class CameraFollow : MonoBehaviour {
 	}
 
     public void MoveCamera(out Vector3 position) {
-        if (player) { transform.localRotation = player.transform.localRotation; }
+        if (player) {
+            transform.rotation = Quaternion.Slerp(transform.rotation, player.transform.rotation, Time.deltaTime * rotationSpeed);
+        }
 
         if (!player.flipping)
         {
