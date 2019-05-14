@@ -156,7 +156,7 @@ public class PlayerNetwork : CharacterStateNetwork {
     protected virtual void ApplyGravity()
     {
         //transform.up = Vector3.Lerp(transform.up, CalculateNormal(), Time.deltaTime * 5f);
-        transform.rotation = Quaternion.LookRotation(transform.forward, CalculateNormal().normal);
+        transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(transform.forward, CalculateNormal().normal), 5f * Time.deltaTime);
 
         // Create Vector direction that is the negative relative up vector
         Vector3 direction = -transform.up;
