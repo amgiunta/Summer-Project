@@ -25,7 +25,6 @@ public class RelativeGravity : MonoBehaviour
     public float gravityScale = 1;
 
     SurfacePoint surface;
-
     Rigidbody2D rigidbody;
 
     Vector3 _relativeGravity;
@@ -46,20 +45,35 @@ public class RelativeGravity : MonoBehaviour
         _center = transform.up * yOffset;
     }
 
+    public Vector2 RelativeVelocity()
+    {
+        return transform.InverseTransformDirection(rigidbody.velocity);
+    }
+
+    public void SetRelativeVelocity(Vector2 newVelocity)
+    {
+        rigidbody.velocity = transform.TransformDirection(newVelocity);
+    }
+
     protected virtual void ApplyGravity() {
         if (customGravity)
         {
             _relativeGravity = customGravityDirection.normalized * rigidbody.mass * gravityScale * -Physics2D.gravity.y;
         }
         else {
-            if (alignToSurface) {
+            if (alignToSurface)
+            {
                 surface = GetSurfacePoint(maxSurfaceDistance);
-                if (surface) {
+                if (surface)
+                {
                     // rotate object to have the same normal as the surface point
                     transform.rotation = Quaternion.LookRotation(Vector3.forward, surface.normal);
                     // Set relative gravity to oposite the normal
                     _relativeGravity = -surface.normal * rigidbody.mass * gravityScale * -Physics2D.gravity.y;
                 }
+            }
+            else if (flipWithPlayer) {
+                _relativeGravity = GameMaster.gameMaster.relativeGravityDirection * rigidbody.mass * gravityScale * -Physics2D.gravity.y;
             }
         }
 

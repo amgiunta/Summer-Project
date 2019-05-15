@@ -144,7 +144,7 @@ public class PlayerNetwork : CharacterStateNetwork {
 
         //Debug.Log("The active state is: " + activeState.name);
     }
-
+    
     private void Flip() {
         float direction = Input.GetAxis("Horizontal") > 0 ? 1 : -1;
 
