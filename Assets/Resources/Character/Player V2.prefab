@@ -40,10 +40,10 @@ GameObject:
   m_Component:
   - component: {fileID: 4323349261031818}
   - component: {fileID: 70071596232371416}
-  - component: {fileID: 50639504847137780}
-  - component: {fileID: 114162880591917350}
+  - component: {fileID: 6159159880933527111}
+  - component: {fileID: 5869936706087519040}
   m_Layer: 9
-  m_Name: Player
+  m_Name: Player V2
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -56,14 +56,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1773571225874264}
-  m_LocalRotation: {x: 0, y: 0, z: -0.8080367, w: 0.5891322}
+  m_LocalRotation: {x: 0, y: 0, z: -0.80803615, w: 0.5891329}
   m_LocalPosition: {x: -17.05, y: -1.64, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 6593363594237348056}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -107.809006}
 --- !u!70 &70071596232371416
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -80,7 +80,25 @@ CapsuleCollider2D:
   m_Offset: {x: 0.00046944447, y: 0.23513329}
   m_Size: {x: 0.52139515, y: 0.46973753}
   m_Direction: 1
---- !u!50 &50639504847137780
+--- !u!114 &6159159880933527111
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1773571225874264}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc0e6b3a36c43ce4da478633594cae65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  alignToSurface: 0
+  flipWithPlayer: 0
+  invertGravity: 0
+  customGravity: 0
+  customGravityDirection: {x: 0, y: -1, z: 0}
+  gravityScale: 1
+--- !u!50 &5869936706087519040
 Rigidbody2D:
   serializedVersion: 4
   m_ObjectHideFlags: 0
@@ -92,44 +110,15 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
-  m_Mass: 0.5
+  m_Mass: 1
   m_LinearDrag: 0
   m_AngularDrag: 0.05
-  m_GravityScale: 0
+  m_GravityScale: 1
   m_Material: {fileID: 0}
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 1
-  m_Constraints: 4
---- !u!114 &114162880591917350
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1773571225874264}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: db409df206e83f54991611f46eaee553, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  speed: 3
-  strafeSpeed: 3
-  fallSpeed: 5
-  maxSpeed: 3
-  jumpForce: 200
-  health: 100
-  maxHealth: 100
-  jumpBufferTime: 1
-  flipTime: 2
-  maxReach: 1
-  flipOffset: {x: 0, y: 0.69}
-  throwForce: {x: 50, y: 50}
-  isGrounded: 0
-  holding: {fileID: 0}
-  rigidbody: {fileID: 50639504847137780}
-  collider: {fileID: 70071596232371416}
-  mainCamera: {fileID: 0}
+  m_CollisionDetection: 0
+  m_Constraints: 0
 --- !u!1 &1047445842281555627
 GameObject:
   m_ObjectHideFlags: 0

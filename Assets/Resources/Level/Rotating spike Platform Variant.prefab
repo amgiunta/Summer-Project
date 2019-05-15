@@ -10,17 +10,22 @@ PrefabInstance:
     - target: {fileID: 1120131928931522692, guid: 141646a2884cc12408862507cd2ad28e,
         type: 3}
       propertyPath: m_Name
-      value: Rotating spike Platform
+      value: Rotating spike Platform (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 1120131928931522692, guid: 141646a2884cc12408862507cd2ad28e,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1120131928931522431, guid: 141646a2884cc12408862507cd2ad28e,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.039
+      value: 21.772
       objectReference: {fileID: 0}
     - target: {fileID: 1120131928931522431, guid: 141646a2884cc12408862507cd2ad28e,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.589
+      value: 3.152
       objectReference: {fileID: 0}
     - target: {fileID: 1120131928931522431, guid: 141646a2884cc12408862507cd2ad28e,
         type: 3}
@@ -86,6 +91,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Spikes
+      objectReference: {fileID: 0}
+    - target: {fileID: 5725740437867579012, guid: fbb04c6655bb93e49a3a49a3a9e63f12,
+        type: 3}
+      propertyPath: m_Layer
+      value: 14
       objectReference: {fileID: 0}
     - target: {fileID: 5322015573765351063, guid: fbb04c6655bb93e49a3a49a3a9e63f12,
         type: 3}
