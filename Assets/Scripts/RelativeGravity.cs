@@ -45,6 +45,11 @@ public class RelativeGravity : MonoBehaviour
         _center = transform.up * yOffset;
     }
 
+    private void FixedUpdate()
+    {
+        ApplyGravity();
+    }
+
     public Vector2 RelativeVelocity()
     {
         return transform.InverseTransformDirection(rigidbody.velocity);
@@ -181,7 +186,8 @@ public class RelativeGravity : MonoBehaviour
         if (!rigidbody)
             Start();
 
-        ApplyGravity();
+        if (!Application.isPlaying)
+            ApplyGravity();
         //Debug.DrawRay(transform.position, _relativeGravity, Color.red);
 
         Gizmos.color = Color.yellow;
@@ -202,7 +208,12 @@ public class RelativeGravity : MonoBehaviour
         if (!Application.isPlaying) { _center = transform.up * yOffset; }
     }
 
-    
+    public static implicit operator Vector3(RelativeGravity rg)
+    {
+        return rg._relativeGravity;
+    }
+
+
     public class SurfacePoint {
         public Vector2 position;
         public Vector2 normal;

@@ -11,28 +11,43 @@ public class PlayerControlerV2 : MonoBehaviour
 
     public float acceleration;
     public float strafeAcceleration;
+    public float jumpAcceleration;
     public float maxSpeed;
     public float maxFallSpeed;
     public float maxReach;
+    public float maxFlipOffset;
+    public float flipTime;
     public Vector2 throwForce;
 
     [Space]
     public Bounds groundCheckArea;
 
-    [HideInInspector]
+    [Space]
+    public UnityEngine.Events.UnityEvent onGrounded;
+    public UnityEngine.Events.UnityEvent onFlipDone;
+    public UnityEngine.Events.UnityEvent onFlipStart;
+
+    //[HideInInspector]
     public bool isGrounded = true;
     [HideInInspector]
+    public bool isFliping = false;
+    [HideInInspector]
     public HoldableObject prop;
+    [HideInInspector]
+    public Vector2 flipPivot;
 
     private Transform sprite;
     private Transform hand;
 
     [HideInInspector]
     public Rigidbody2D rigidbody;
+    CameraFollow mainCamera;
     RelativeGravity relativeGravity;
 
     float _moveDir;
-    bool _jump;
+    int _flips = 0;
+    public bool _lastGroundState;
+    //bool _jump;
 
     // Start is called before the first frame update
     void Start()
@@ -42,6 +57,16 @@ public class PlayerControlerV2 : MonoBehaviour
 
         rigidbody = GetComponent<Rigidbody2D>();
         relativeGravity = GetComponent<RelativeGravity>();
+        mainCamera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<CameraFollow>();
+
+        onGrounded.AddListener(() => {
+            Debug.Log("Grounded!");
+            if (_flips < 1)
+            {
+                _flips = 1;
+            }
+        });
+
     }
 
     // Update is called once per frame
@@ -50,14 +75,25 @@ public class PlayerControlerV2 : MonoBehaviour
         _moveDir = Input.GetAxis("Horizontal");
 
         if (Input.GetButtonDown("Use")) { GrabNearestProp(); }
-        if (Input.GetButtonDown("Jump")) { _jump = true; }
+        if (Input.GetButtonDown("Jump")) { Jump(); }
+        if (Input.GetButtonDown("Flip")) { Flip(); }
+
+        if (_lastGroundState == false && isGrounded) { onGrounded.Invoke(); }
+    }
+
+    private void LateUpdate()
+    {
+        _lastGroundState = isGrounded;
+        
     }
 
     private void FixedUpdate()
     {
         GroundCheck();
+        flipPivot = CalculateFlipPivot();
+
         Move(_moveDir);
-        //if (_jump) { Jump(); }
+
     }
 
     public void Move(float direction) {
@@ -72,6 +108,12 @@ public class PlayerControlerV2 : MonoBehaviour
             rigidbody.AddRelativeForce(new Vector2(direction, 0) * strafeAcceleration * rigidbody.mass);
         }
 
+        if (Mathf.RoundToInt(direction) != 0) {
+            int clampedDirection = Mathf.RoundToInt(direction);
+
+            sprite.localScale = new Vector3(Mathf.Abs(sprite.localScale.x) * clampedDirection, sprite.localScale.y, sprite.localScale.z);
+        }
+
         CapVelocity();
     }
 
@@ -84,6 +126,35 @@ public class PlayerControlerV2 : MonoBehaviour
         if (Mathf.Abs(relativeVelocity.y) > maxFallSpeed) { relativeVelocity.y = maxFallSpeed * yDir; }
 
         relativeGravity.SetRelativeVelocity(relativeVelocity);
+    }
+
+    private Vector2 CalculateFlipPivot() {
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.up, maxFlipOffset, groundLayers);
+
+        if (hit)
+        {
+            Vector2 halfDistance = Vector2.Lerp(transform.position, hit.point, 0.5f);
+            return halfDistance;
+        }
+        else {
+            return transform.position + (transform.up * maxFlipOffset);
+        }
+    }
+
+    private void Jump() {
+        if (prop) { ThrowHeldProp(); return; }
+        if (!isGrounded) { return; }
+        //_jump = false;
+
+        Vector2 jumpForce = Vector3.up * jumpAcceleration * rigidbody.mass;
+        rigidbody.AddRelativeForce(jumpForce);
+    }
+
+    private void Flip() {
+        if (_flips <= 0) { return; }
+
+        _flips--;
+        StartCoroutine(SpinPlayer());
     }
 
     private void GroundCheck() {
@@ -101,7 +172,7 @@ public class PlayerControlerV2 : MonoBehaviour
     private void GrabNearestProp()
     {
         // If the player is already holding something, drop it.
-        if (prop) { ReleaseHeldProp(); }
+        if (prop) { ReleaseHeldProp(); return; }
 
         // Create an array of Collider2D props that is the colliders of all props within reach of this player.
         Collider2D[] props = Physics2D.OverlapCircleAll(transform.position, maxReach, 1 << LayerMask.NameToLayer("Prop"));
@@ -208,6 +279,58 @@ public class PlayerControlerV2 : MonoBehaviour
         prop.transform.parent = hand;
     }
 
+    private IEnumerator SpinPlayer() {
+        Time.timeScale = 0;
+        rigidbody.bodyType = RigidbodyType2D.Kinematic;
+        isFliping = true;
+
+        onFlipStart.Invoke();
+
+        // Create float segment time that is 1/4th the animation time.
+        float segmentTime = flipTime / 4f;
+        // Create float tick that is the length of 1 frame in seconds.
+        float tick = Time.deltaTime;
+        // Create float angle that is 180 / (segment time / tick)
+        //float angle = 180 / (segmentTime / tick);
+        Vector3 initialUp = transform.up;
+
+
+        // Loop the following for every step of stride tick where t is between 0 and segment time.
+        for (float t = 0; t < segmentTime; t += tick)
+        {
+            float percent = t / segmentTime;
+
+            // Set the position of the player to the linear interpolation at point t on the line between the position of the player and the target position.
+            transform.position = Vector2.Lerp(transform.position, flipPivot, percent);
+            mainCamera.MoveCamera();
+            yield return new WaitForEndOfFrame();
+        }
+        // Set the player's position to the target position.
+        transform.position = flipPivot;
+
+        Quaternion targetRotation = Quaternion.LookRotation(Vector3.forward, -initialUp);
+        Quaternion initialRotation = transform.rotation;
+        // Loop the following for every step of stride tick where t is between 0 and segment time.
+        for (float t = 0; t < segmentTime; t += tick)
+        {
+            float percent = t / segmentTime;
+
+            // Rotate the player around the z axis by angle
+            transform.rotation = Quaternion.Lerp(initialRotation, targetRotation, percent);
+            mainCamera.MoveCamera();
+            yield return new WaitForEndOfFrame();
+        }
+
+        transform.rotation = targetRotation;
+
+        Time.timeScale = 1;
+        rigidbody.bodyType = RigidbodyType2D.Dynamic;
+        isFliping = false;
+
+        // Set the done animating flag to true.
+        onFlipDone.Invoke();
+    }
+
     private void OnDrawGizmosSelected()
     {
         Vector2 groundBoxBotLeft = transform.rotation * groundCheckArea.min + transform.position;
@@ -219,5 +342,15 @@ public class PlayerControlerV2 : MonoBehaviour
         Debug.DrawLine(groundBoxBotLeft, groundBoxTopLeft, Color.green);
         Debug.DrawLine(groundBoxTopLeft, groundBoxTopRight, Color.green);
         Debug.DrawLine(groundBoxBotRight, groundBoxTopRight, Color.green);
+
+        if (!Application.isPlaying) {
+            rigidbody = GetComponent<Rigidbody2D>();
+            flipPivot = CalculateFlipPivot();
+        }
+
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(flipPivot, 1);
+
+
     }
 }
