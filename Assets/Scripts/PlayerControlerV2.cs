@@ -12,6 +12,7 @@ public class PlayerControlerV2 : MonoBehaviour
     public float acceleration;
     public float strafeAcceleration;
     public float jumpAcceleration;
+    public float deceleration;
     public float maxSpeed;
     public float maxFallSpeed;
     public float maxReach;
@@ -32,7 +33,7 @@ public class PlayerControlerV2 : MonoBehaviour
     [HideInInspector]
     public bool isFliping = false;
     [HideInInspector]
-    public HoldableObject prop;
+    public HoldableObjectV2 prop;
     [HideInInspector]
     public Vector2 flipPivot;
 
@@ -84,7 +85,7 @@ public class PlayerControlerV2 : MonoBehaviour
     private void LateUpdate()
     {
         _lastGroundState = isGrounded;
-        
+        Decelerate();
     }
 
     private void FixedUpdate()
@@ -128,7 +129,15 @@ public class PlayerControlerV2 : MonoBehaviour
         relativeGravity.SetRelativeVelocity(relativeVelocity);
     }
 
+    public void Hold(HoldableObjectV2 prop) {
+        ReleaseHeldProp();
+
+        StartCoroutine(MovePropToHand(0.5f, prop));
+
+    }
+
     private Vector2 CalculateFlipPivot() {
+        if (isFliping) { return flipPivot; }
         RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.up, maxFlipOffset, groundLayers);
 
         if (hit)
@@ -166,6 +175,14 @@ public class PlayerControlerV2 : MonoBehaviour
 
     }
 
+    private void Decelerate() {
+        if (!isGrounded) { return; }
+        Vector2 relativeVelocity = relativeGravity.RelativeVelocity();
+
+        relativeVelocity = Vector2.Lerp(relativeVelocity, new Vector2(0, relativeVelocity.y), deceleration * Time.deltaTime);
+        relativeGravity.SetRelativeVelocity(relativeVelocity);
+    }
+
     /// <summary>
     /// Get the closest Holdable Object in the scene to the player, and pick it up.
     /// </summary>
@@ -182,7 +199,7 @@ public class PlayerControlerV2 : MonoBehaviour
         else { Debug.Log(props.Length); }
 
         // Create Holdable Object nearest that is the first prop.
-        HoldableObject nearest = props[0].GetComponent<HoldableObject>();
+        HoldableObjectV2 nearest = props[0].GetComponent<HoldableObjectV2>();
 
         // For every prop in the list of props,
         foreach (Collider2D prop in props)
@@ -191,7 +208,7 @@ public class PlayerControlerV2 : MonoBehaviour
             if (Vector2.Distance(prop.transform.position, transform.position) < Vector2.Distance(nearest.transform.position, transform.position))
             {
                 // Set nearest to the prop.
-                nearest = prop.GetComponent<HoldableObject>();
+                nearest = prop.GetComponent<HoldableObjectV2>();
             }
         }
 
@@ -233,20 +250,24 @@ public class PlayerControlerV2 : MonoBehaviour
         float xDirection = 1;
 
         // If the x-scale of this object is positive, x direction is 1.
-        if (transform.localScale.x > 0) { xDirection = 1; }
+        if (relativeGravity.RelativeVelocity().x > 0) { xDirection = 1; }
         // Otherwise, x direction is -1.
         else { xDirection = -1; }
+
+        prop.transform.rotation = transform.rotation;
 
         // Create Rigidbody2D prop body that is the rigidbody attached to the held prop.
         Rigidbody2D propBody = prop.GetComponent<Rigidbody2D>();
         // Release the held prop.
-        ReleaseHeldProp();
         // Set the velocity of the prop body to be the velocity of the player.
         propBody.velocity = rigidbody.velocity;
+        prop.transform.parent = null;
+        prop.transform.localScale = new Vector3(Mathf.Abs(prop.transform.localScale.x), prop.transform.localScale.y, prop.transform.localScale.z);
+        ReleaseHeldProp();
         // Create Vector3 throw vector where: x is the throw force by the x direction, y is the throw force, z is 0.
         Vector3 throwVector = new Vector3(throwForce.x * xDirection, throwForce.y, 0f);
         // Add the throw vector rotated by the player's rotation.
-        propBody.AddForce(transform.rotation * throwVector);
+        propBody.AddRelativeForce(throwVector);
     }
 
     /// <summary>
@@ -255,7 +276,7 @@ public class PlayerControlerV2 : MonoBehaviour
     /// <param name="animationTime">Duration of the movement (in seconds).</param>
     /// <param name="prop">A reference to the Holdable Object to move.</param>
     /// <returns>An enumerator</returns>
-    private IEnumerator MovePropToHand(float animationTime, HoldableObject prop)
+    private IEnumerator MovePropToHand(float animationTime, HoldableObjectV2 prop)
     {
         // Set the held object reference to the prop.
         this.prop = prop;
@@ -280,9 +301,12 @@ public class PlayerControlerV2 : MonoBehaviour
     }
 
     private IEnumerator SpinPlayer() {
-        Time.timeScale = 0;
+        //Time.timeScale = 0;
         rigidbody.bodyType = RigidbodyType2D.Kinematic;
+        Vector2 velocity = rigidbody.velocity;
+        rigidbody.velocity = Vector2.zero;
         isFliping = true;
+        relativeGravity.useGravity = false;
 
         onFlipStart.Invoke();
 
@@ -294,7 +318,7 @@ public class PlayerControlerV2 : MonoBehaviour
         //float angle = 180 / (segmentTime / tick);
         Vector3 initialUp = transform.up;
 
-
+        relativeGravity.alignToSurface = false;
         // Loop the following for every step of stride tick where t is between 0 and segment time.
         for (float t = 0; t < segmentTime; t += tick)
         {
@@ -317,18 +341,30 @@ public class PlayerControlerV2 : MonoBehaviour
 
             // Rotate the player around the z axis by angle
             transform.rotation = Quaternion.Lerp(initialRotation, targetRotation, percent);
+            GameMaster.gameMaster.relativeGravityDirection = -transform.up;
             mainCamera.MoveCamera();
             yield return new WaitForEndOfFrame();
         }
 
         transform.rotation = targetRotation;
 
+        relativeGravity.alignToSurface = true;
+
         Time.timeScale = 1;
         rigidbody.bodyType = RigidbodyType2D.Dynamic;
+        rigidbody.velocity = velocity;
         isFliping = false;
+        relativeGravity.useGravity = true;
+
+        GameMaster.gameMaster.relativeGravityDirection = -transform.up;
 
         // Set the done animating flag to true.
         onFlipDone.Invoke();
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.transform.CompareTag("Danger")) { GameMaster.gameMaster.RestartLevel(); }
     }
 
     private void OnDrawGizmosSelected()

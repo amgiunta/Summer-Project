@@ -23,6 +23,7 @@ public class RelativeGravity : MonoBehaviour
     public Vector3 customGravityDirection;
     [Range(0.1f, 10)]
     public float gravityScale = 1;
+    public bool useGravity = true;
 
     SurfacePoint surface;
     Rigidbody2D rigidbody;
@@ -83,7 +84,7 @@ public class RelativeGravity : MonoBehaviour
         }
 
         if (invertGravity) { _relativeGravity *= -1; }
-        if (Application.isPlaying) {
+        if (Application.isPlaying && useGravity) {
 
             rigidbody.AddForce(_relativeGravity);
         }
@@ -119,30 +120,8 @@ public class RelativeGravity : MonoBehaviour
 
         if (leftAngle && rightAngle)
         {
-            /*
-            Vector2 point;
-
-            
-            if (leftAngle.point.collider == rightAngle.point.collider)
-            {
-                point = leftAngle.point.collider.ClosestPoint(transform.position);
-            }
-            else {
-                Vector2 lPoint = leftAngle.point.collider.ClosestPoint(transform.position);
-                Vector2 rPoint = rightAngle.point.collider.ClosestPoint(transform.position);
-
-                if (Vector2.Distance(lPoint, transform.position) < Vector2.Distance(rPoint, transform.position)) { point = lPoint; }
-                else { point = rPoint; }
-            }
-            */
-
-
             if (Vector2.Angle(transform.up, leftAngle.normal) < Vector2.Angle(transform.up, rightAngle.normal)) { return leftAngle; }
             else return rightAngle;
-
-            //RaycastHit2D newHit = Physics2D.Raycast(transform.position + _center, direction, primarySurfaceDistance, groundLayers);
-
-            //return newHit;
         }
         else { return null; }
     }
@@ -191,10 +170,6 @@ public class RelativeGravity : MonoBehaviour
         //Debug.DrawRay(transform.position, _relativeGravity, Color.red);
 
         Gizmos.color = Color.yellow;
-        //Vector3 leftConeSideDirection = Quaternion.Euler(0,0,-maxAngle/2) * -transform.up;
-        //Vector3 rightConeSideDirection = Quaternion.Euler(0, 0, maxAngle / 2) * -transform.up;
-        //Gizmos.DrawRay(transform.position + _center, leftConeSideDirection * primarySurfaceDistance);
-        //Gizmos.DrawRay(transform.position + _center, rightConeSideDirection * primarySurfaceDistance);
 
         Gizmos.DrawWireSphere(transform.position + _center, maxSurfaceDistance);
 

@@ -38,12 +38,12 @@ public class MovingPlatform : DynamicPlatform {
     /// <summary>
     /// Flag to move the platform when possible.
     /// </summary>
-    [HideInInspector]
+    //[HideInInspector]
     public bool movePlatform;
     /// <summary>
     /// Flag when the platform is currently moving to a new location.
     /// </summary>
-    [HideInInspector]
+    //[HideInInspector]
     public bool isMoving;
     /// <summary>
     /// Should the platform automatically move when it hits the target location?
@@ -63,12 +63,17 @@ public class MovingPlatform : DynamicPlatform {
         transform.position = currentPathPoint.position;
     }
 
+    private void Update()
+    {
+        if (continuous) { movePlatform = true; }
+        if (movePlatform && !isMoving) { StartCoroutine(MoveToPoint(GetNextPoint())); }
+        
+    }
+
     public override void FixedUpdate() {
         // If continuous, set the move flag to true.
-        if (continuous) { movePlatform = true; }
 
         // Should the platform move, and it's not already moving, move the platform.
-        if (movePlatform && !isMoving) { StartCoroutine(MoveToPoint(GetNextPoint())); }
         // Call the base Fixed update.
         base.FixedUpdate();
     }
@@ -168,7 +173,10 @@ public class MovingPlatform : DynamicPlatform {
         // Set the movement flag to true.
         isMoving = true;
         // Wait for the delay time.
-        yield return new WaitForSeconds(delay);
+        if (delay != 0)
+        {
+            yield return new WaitForSeconds(delay);
+        }
         // Create 3D point that is the poition of this object
         Vector3 startPos = transform.position;
         // Create float that is the distance between this object and the position of the next point

@@ -96,13 +96,13 @@ public class DynamicPlatform : MonoBehaviour {
     /// </summary>
     public virtual void Orient() {
         // If player is not null and orientWithPlayer is true, set this object's rotation to the player's rotation.
-        if (orientWithPlayer && player)
+        if (orientWithPlayer)
         {
-            _gravityDirection = -player.transform.up;
+            _gravityDirection = GameMaster.gameMaster.relativeGravityDirection;
 
             if (rotate)
             {
-                Quaternion targetRotation = _absoluteRotation * player.transform.localRotation;
+                Quaternion targetRotation = Quaternion.LookRotation(Vector3.forward, -_gravityDirection);
                 transform.localRotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
             }
         }
