@@ -35,6 +35,8 @@ public class GameMaster : MonoBehaviour {
         StartCoroutine(LevelChangeTransition(buildIndex, 1f));
     }
 
+    public void ChangeLevel(int buildIndex) { StartCoroutine(LevelChangeTransition(buildIndex, 0)); }
+
     public void ChangeRelativeGravity(Vector3 newGravity) {
         relativeGravityDirection = newGravity.normalized;
     }

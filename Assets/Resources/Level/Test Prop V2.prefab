@@ -118,17 +118,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   groundLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 256
   yOffset: 0
-  alignToSurface: 0
+  alignToSurface: 1
   flipWithPlayer: 0
   invertGravity: 0
   customGravity: 0
-  maxAngle: 0
-  primarySurfaceDistance: 0
-  maxSurfaceDistance: 1
+  maxAngle: 10.3
+  primarySurfaceDistance: 2.14
+  maxSurfaceDistance: 1.09
   customGravityDirection: {x: 0, y: 0, z: 0}
   gravityScale: 1
+  useGravity: 1
+  _relativeGravity: {x: -0, y: -9.809999, z: 0}
 --- !u!114 &6812501753158547681
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -141,6 +143,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 35dae8408f450c946bfd29a98b2ced4f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  onPickedUp:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  onReleased:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
 --- !u!61 &6710932828559521871
 BoxCollider2D:
   m_ObjectHideFlags: 0

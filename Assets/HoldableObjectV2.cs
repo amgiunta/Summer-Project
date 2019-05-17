@@ -51,6 +51,7 @@ public class HoldableObjectV2 : MonoBehaviour
         transform.parent = startParent;
         transform.position = startPos;
         transform.rotation = startRotation;
+        GetComponent<RelativeGravity>().SetGravityDirection(-transform.up);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)

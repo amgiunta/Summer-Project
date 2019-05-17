@@ -27,8 +27,8 @@ public class RelativeGravity : MonoBehaviour
 
     SurfacePoint surface;
     Rigidbody2D rigidbody;
+    public Vector3 _relativeGravity;
 
-    Vector3 _relativeGravity;
     Vector3 _center;
 
     // Start is called before the first frame update
@@ -59,6 +59,10 @@ public class RelativeGravity : MonoBehaviour
     public void SetRelativeVelocity(Vector2 newVelocity)
     {
         rigidbody.velocity = transform.TransformDirection(newVelocity);
+    }
+
+    public void SetGravityDirection(Vector2 direction) {
+        _relativeGravity = direction * rigidbody.mass * gravityScale * -Physics2D.gravity.y;
     }
 
     protected virtual void ApplyGravity() {

@@ -348,6 +348,7 @@ public class PlayerControlerV2 : MonoBehaviour
 
         transform.rotation = targetRotation;
 
+        relativeGravity._relativeGravity = -transform.up * rigidbody.mass * relativeGravity.gravityScale * -Physics2D.gravity.y;
         relativeGravity.alignToSurface = true;
 
         Time.timeScale = 1;
