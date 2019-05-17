@@ -5,7 +5,7 @@ using UnityEngine;
 public class CameraFollow : MonoBehaviour {
 
     public Transform target;
-    public PlayerNetwork player;
+    public PlayerControlerV2 player;
     public Vector3 offset;
     public Vector2 predictionAmount;
 
@@ -26,13 +26,17 @@ public class CameraFollow : MonoBehaviour {
 	}
 
     public void MoveCamera(out Vector3 position) {
+
         if (player) {
             transform.rotation = Quaternion.Slerp(transform.rotation, player.transform.rotation, Time.deltaTime * rotationSpeed);
         }
 
-        if (!player.flipping)
+        position = new Vector3(player.transform.position.x, player.transform.position.y, offset.z);
+
+        
+        if (!player.isFliping)
         {
-            position = player.GetFlipPivot(offset);
+            position = player.transform.position + offset;
             if (prediction && player)
             {
                 Vector2 velocity = player.rigidbody.velocity;
@@ -47,6 +51,7 @@ public class CameraFollow : MonoBehaviour {
 
             //transform.position = position;
         }
+        
 
         transform.position = Vector3.Lerp(transform.position, position, cameraSpeed * Time.deltaTime);
 
@@ -58,7 +63,7 @@ public class CameraFollow : MonoBehaviour {
     }
 
     public void FindPlayer() {
-        player = FindObjectOfType<PlayerNetwork>();
+        player = FindObjectOfType<PlayerControlerV2>();
 
         if (!player) { Debug.LogError("Could not locate player! Check to see if the player is in the scene, tagged as 'Player', and has the PlayerNetwork (or some derivative behavior) attached.", this); }
         else { target = player.transform; }
@@ -66,6 +71,10 @@ public class CameraFollow : MonoBehaviour {
 
     private void OnDrawGizmos() {
         if (!player) { FindPlayer(); }
-        MoveCamera();
+
+        if (!Application.isPlaying)
+            MoveCamera();
     }
+
+    
 }

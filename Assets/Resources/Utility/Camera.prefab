@@ -344,8 +344,9 @@ MonoBehaviour:
   target: {fileID: 0}
   player: {fileID: 0}
   offset: {x: 0, y: 1, z: -10}
-  predictionAmount: {x: 0.7, y: 0.7}
+  predictionAmount: {x: 0.7, y: 0}
   cameraSpeed: 1
+  rotationSpeed: 10
   prediction: 1
 --- !u!1 &1889727821422430
 GameObject:
@@ -413,7 +414,7 @@ Camera:
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 32545
+    m_Bits: 65313
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -511,6 +512,4 @@ MonoBehaviour:
   breakBeforeColorGrading: 0
   m_BeforeTransparentBundles: []
   m_BeforeStackBundles: []
-  m_AfterStackBundles:
-  - assemblyQualifiedName: UnityEngine.Rendering.PostProcessing.Blur, Assembly-CSharp,
-      Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+  m_AfterStackBundles: []

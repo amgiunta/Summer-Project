@@ -144,7 +144,7 @@ public class PlayerNetwork : CharacterStateNetwork {
 
         //Debug.Log("The active state is: " + activeState.name);
     }
-
+    
     private void Flip() {
         float direction = Input.GetAxis("Horizontal") > 0 ? 1 : -1;
 
@@ -162,12 +162,12 @@ public class PlayerNetwork : CharacterStateNetwork {
     {
         RaycastHit2D point = CalculateNormal();
         Vector2 normal = point.normal;
-        Quaternion pointRotation = Quaternion.Euler(0, 0, point.transform.eulerAngles.z);
 
         transform.up = normal;
         //transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Vector3.forward, normal), 5f * Time.deltaTime);
         //transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(Vector3.forward, normal), 5f * Time.deltaTime);
-        rigidbody.MoveRotation(Quaternion.LookRotation(Vector3.forward, normal));
+        //rigidbody.MoveRotation(Quaternion.LookRotation(Vector3.forward, normal));
+        transform.rotation = Quaternion.LookRotation(Vector3.forward, normal);
 
         // Create Vector direction that is the negative relative up vector
         Vector3 direction = -normal;

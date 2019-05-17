@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3525180648104800969}
   - component: {fileID: 1766124281570671073}
   - component: {fileID: 3430194756807350453}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Neon Border
   m_TagString: Untagged
   m_Icon: {fileID: 0}
