@@ -4,12 +4,12 @@ using UnityEngine;
 
 public class FlipIndicator : MonoBehaviour
 {
-    PlayerControlerV2 player;
+    PlayerControllerV2 player;
 
     // Start is called before the first frame update
     void Start()
     {
-        player = FindObjectOfType<PlayerControlerV2>();
+        player = FindObjectOfType<PlayerControllerV2>();
     }
 
     // Update is called once per frame

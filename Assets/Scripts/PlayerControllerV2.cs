@@ -4,7 +4,7 @@ using UnityEngine;
 
 [RequireComponent(typeof(RelativeGravity))]
 [RequireComponent(typeof(Rigidbody2D))]
-public class PlayerControlerV2 : MonoBehaviour
+public class PlayerControllerV2 : MonoBehaviour
 {
     public LayerMask groundLayers;
     [Space]

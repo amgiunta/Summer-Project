@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Animations;
 using UnityEngine;
 
 /// <summary>
@@ -8,13 +9,14 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(Collider2D))]
 public class PlayerNetwork : CharacterStateNetwork {
+    public LayerMask groundLayer;
     public float gravityScale;
     [Tooltip("Movement speed on the ground (m/s)")]
-    public float speed;
-    [Tooltip("Movement speed while in air (m/s)")]
-    public float strafeSpeed;
+    public float acceleration;
+    public float decceleration;
+    public float strafeAcceleration;
     [Tooltip("Maximum fall speed (m/s)")]
-    public float fallSpeed;
+    public float maxFallSpeed;
     [Tooltip("Maximum movement speed (m/s)")]
     public float maxSpeed;
     public float jumpForce;
@@ -53,8 +55,13 @@ public class PlayerNetwork : CharacterStateNetwork {
     new public Collider2D collider;
     public CameraFollow mainCamera;
 
+    [HideInInspector]
+    public Vector2 localVelocity;
+
     Vector2 _lastNormal;
     Vector2 _lastNormalPosition;
+
+    public List<RaycastHit2D> closePoints;
 
     /// <summary>
     /// A reference to the hand of the player.
@@ -63,6 +70,7 @@ public class PlayerNetwork : CharacterStateNetwork {
 
     #region State Names
     public PlayerDead dead;
+    public PlayerIdle idle;
     public PlayerWalking walking;
     public PlayerJumping jumping;
     public PlayerRising rising;
@@ -76,6 +84,7 @@ public class PlayerNetwork : CharacterStateNetwork {
         collider = GetComponent<Collider2D>();
         mainCamera = FindObjectOfType<CameraFollow>();
         hand = transform.Find("Sprite").Find("Hand");
+        closePoints = new List<RaycastHit2D>();
 
         if (!hand) { Debug.LogError("No hand on player detected! Make sure there is a 'Hand' child under the player, and name it accordingly."); }
 
@@ -85,6 +94,8 @@ public class PlayerNetwork : CharacterStateNetwork {
     public override void Update()
     {
         base.Update();
+
+        localVelocity = transform.InverseTransformDirection(rigidbody.velocity);
 
         // If the timescale is greater than 0,
         if (Time.timeScale > 0)
@@ -129,9 +140,6 @@ public class PlayerNetwork : CharacterStateNetwork {
                     }
                 }
             }
-
-            // Cap the velocity of the player to the maximum speed.
-            CapVelocity();
         }
     }
 
@@ -151,17 +159,13 @@ public class PlayerNetwork : CharacterStateNetwork {
         transform.Find("Sprite").localScale = new Vector3(direction, transform.Find("Sprite").localScale.y, transform.Find("Sprite").localScale.z);
     }
 
-    protected void Move(Vector2 movementDirection, float speed) {
-        rigidbody.AddRelativeForce(movementDirection * speed);
-    }
-
     /// <summary>
     /// Apply to force of gravity along the relative up vector.
     /// </summary>
     protected virtual void ApplyGravity()
     {
-        RaycastHit2D point = CalculateNormal();
-        Vector2 normal = point.normal;
+        
+        Vector2 normal = CalculateNormal();
 
         transform.up = normal;
         //transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Vector3.forward, normal), 5f * Time.deltaTime);
@@ -185,37 +189,44 @@ public class PlayerNetwork : CharacterStateNetwork {
     /// </summary>
     private void CreateNetwork() {
         dead = new PlayerDead(this);
+        idle = new PlayerIdle(this);
         walking = new PlayerWalking(this);
-        jumping = new PlayerJumping(jumpBufferTime, this);
+        jumping = new PlayerJumping(jumpBufferTime, 0.1f, this);
         rising = new PlayerRising(this);
-        falling = new PlayerFalling(this);
+        falling = new PlayerFalling(this, 1f);
         flipping = new PlayerFlipping(flipTime, flipOffset, this);
 
+        idle.AddTransition(dead);
+        idle.AddTransition(walking);
+        idle.AddTransition(rising);
+        idle.AddTransition(falling);
+        idle.AddTransition(jumping);
+
         walking.AddTransition(dead);
-        walking.AddTransition(jumping);
         walking.AddTransition(rising);
         walking.AddTransition(falling);
-        walking.AddTransition(flipping);
+        walking.AddTransition(idle);
+        walking.AddTransition(jumping);
 
         jumping.AddTransition(dead);
-        jumping.AddTransition(walking);
+        jumping.AddTransition(idle);
         jumping.AddTransition(rising);
         jumping.AddTransition(falling);
         jumping.AddTransition(flipping);
 
         rising.AddTransition(dead);
-        rising.AddTransition(walking);
+        rising.AddTransition(idle);
         rising.AddTransition(falling);
-        rising.AddTransition(flipping);
 
         falling.AddTransition(dead);
-        falling.AddTransition(walking);
+        falling.AddTransition(idle);
         falling.AddTransition(rising);
+        falling.AddTransition(jumping);
 
         flipping.AddTransition(walking);
         flipping.AddTransition(falling);
 
-        activeState = walking;
+        activeState = idle;
     }
 
     /// <summary>
@@ -225,6 +236,17 @@ public class PlayerNetwork : CharacterStateNetwork {
     /// <returns></returns>
     public Vector3 GetFlipPivot(Vector3 offset) {
         return transform.position + (transform.localRotation * offset);
+    }
+
+    public void Move(float acceleration, float direction) {
+        Vector2 newLocalVel = localVelocity;
+
+        if (Mathf.Abs(localVelocity.x) < maxSpeed)
+        {
+            newLocalVel = localVelocity + new Vector2(acceleration * direction, 0);
+        }
+
+        rigidbody.velocity = transform.TransformDirection(newLocalVel);
     }
 
     /// <summary>
@@ -346,54 +368,35 @@ public class PlayerNetwork : CharacterStateNetwork {
     /// Check if the player is on the ground.
     /// </summary>
     private void GroundCheck() {
-        // Create a Collider2D collider that is any environment piece that is within a box around the player that is half the player's width, and 0.2 m tall.
-        Collider2D collider = Physics2D.OverlapBox(transform.position, new Vector2(transform.lossyScale.x/2, 0.2f), 0, 1 << LayerMask.NameToLayer("Environment"));
+        ContactFilter2D filter = new ContactFilter2D();
+        filter.layerMask = groundLayer;
 
+        // Create a Collider2D collider that is any environment piece that is within a box around the player that is half the player's width, and 0.2 m tall.
+        Collider2D collider = Physics2D.OverlapBox(transform.position, new Vector2(transform.lossyScale.x/2, 0.2f), 0, groundLayer);
+        
+        Physics2D.CircleCast(transform.position, transform.lossyScale.x / 2, -transform.up, filter, closePoints, 10);
         // If the collider exists, the player is grounded.
         if (collider) { isGrounded = true; }
         // Otherwise, the player is not grounded.
         else { isGrounded = false; }
     }
 
-    private RaycastHit2D CalculateNormal()
+    private Vector2 CalculateNormal()
     {
-        Vector3 offset = new Vector3(0, 0.25f, 0);
-        offset.Scale(transform.up);
-        RaycastHit2D hit = Physics2D.CircleCast(transform.position + offset, transform.lossyScale.x / 4, -transform.up, 6f, (1 << LayerMask.NameToLayer("Environment")));
+        if (closePoints == null) { return Vector2.up; }
+        if (closePoints.Count == 0) { return Vector2.up; }
+        Vector2 normalSum = Vector2.zero;
 
-        Debug.DrawRay(transform.position + offset, -transform.up, Color.yellow);
-
-        hit.normal = hit ? (Vector3)hit.normal : transform.up;
-        hit.point = hit ? (Vector3)hit.point : transform.position - (-transform.up * 6f);
-
-        if ((hit.point - _lastNormalPosition).sqrMagnitude < 0.001f) { hit.normal = _lastNormal; }
-
-        _lastNormal = hit.normal;
-        _lastNormalPosition = hit.point;
-
-        return hit;
-    }
-
-    /// <summary>
-    /// Cap the player's velocity so that the magnitude is never greater than the maximum speed.
-    /// </summary>
-    private void CapVelocity() {
-        // If the absolute value of the x component of the player's velocity is greater than the max speed,
-        if (Mathf.Abs(rigidbody.velocity.x) > maxSpeed) {
-            // Create int direction that is the direction of the x component of the player's velocity (-1, or 1).
-            int direction = (int) (rigidbody.velocity.x / Mathf.Abs(rigidbody.velocity.x));
-            // Set the player's velocity x value to be max speed * direction.
-            rigidbody.velocity = new Vector2(direction * maxSpeed, rigidbody.velocity.y);
+        foreach (RaycastHit2D hitPoint in closePoints) {
+            normalSum += hitPoint.normal;
+            Debug.DrawRay(hitPoint.point, hitPoint.normal, Color.green);
         }
 
-        // If the absolute value of the player's velocity y value is greater than fall speed,
-        if (Mathf.Abs(rigidbody.velocity.y) > fallSpeed)
-        {
-            // Create int direction that is the direction of the y component of the player's velocity (-1, or 1).
-            int direction = (int)(rigidbody.velocity.y / Mathf.Abs(rigidbody.velocity.y));
-            // Set the player's velocity y value to be direction * fall speed.
-            rigidbody.velocity = new Vector2(rigidbody.velocity.x, direction * fallSpeed);
-        }
+        Debug.Break();
+
+        Vector2 normal = normalSum / closePoints.Count;
+
+        return normal;
     }
 
     private void OnDrawGizmosSelected()
@@ -407,10 +410,9 @@ public class PlayerNetwork : CharacterStateNetwork {
         Gizmos.color = Color.blue;
         Gizmos.DrawWireCube(transform.position, new Vector2(transform.localScale.x / 2, 0.2f));
         Gizmos.color = Color.red;
-        RaycastHit2D hitPoint = CalculateNormal();
+        Vector2 normal = CalculateNormal();
 
-        Gizmos.DrawWireSphere(hitPoint.point, transform.lossyScale.x / 4f);
-        Debug.DrawRay(hitPoint.point, hitPoint.normal, Color.red);
+        Debug.DrawRay(transform.position, normal, Color.red);
 
         ApplyGravity();
 
@@ -452,6 +454,53 @@ public class PlayerNetwork : CharacterStateNetwork {
             GameMaster.gameMaster.RestartLevel();
         }
     }
+    public class PlayerIdle : PlayerCharacterState {
+        public float dccelPerFrame;
+
+        public PlayerIdle(PlayerNetwork network) : base("Player Idle", network) { }
+
+        public override void OnStateEnter()
+        {
+            dccelPerFrame = player.decceleration * Time.deltaTime;
+        }
+
+        public override void Subject()
+        {
+            if (player.health <= 0) { Transition("Player Dead"); }
+            else if (!player.isGrounded)
+            {
+                if (player.localVelocity.y > 0)
+                {
+                    Transition("Player Rising");
+                }
+                else
+                {
+                    Transition("Player Falling");
+                }
+            }
+            else if (Input.GetAxis("Horizontal") != 0) { Transition("Player Walking"); }
+            else if (Input.GetButtonDown("Jump")) { Transition("Player Jumping"); }
+        }
+
+        public override void FixedUpdate()
+        {
+            if (player.localVelocity.x != 0) {
+                Vector2 newLocalVel;
+
+                float direction = (player.localVelocity.x < 0) ? 1 : -1;
+
+                if (Mathf.Abs(player.localVelocity.x) < dccelPerFrame)
+                {
+                    newLocalVel = new Vector2(0, player.localVelocity.y);
+                }
+                else {
+                    newLocalVel = player.localVelocity + new Vector2(dccelPerFrame * direction, 0);
+                }
+
+                player.rigidbody.velocity = player.transform.TransformDirection(newLocalVel);
+            }
+        }
+    }
     /// <summary>
     /// The walking state of the player.
     /// </summary>
@@ -460,33 +509,33 @@ public class PlayerNetwork : CharacterStateNetwork {
         /// Creates a Player Walking state.
         /// </summary>
         /// <param name="network">Reference to the player's state machine.</param>
+        public float acclPerFrame; 
+
         public PlayerWalking(PlayerNetwork network) : base("Player Walking", network) { }
+
+        public override void OnStateEnter()
+        {
+            acclPerFrame = player.acceleration * Time.deltaTime;
+        }
 
         public override void Subject()
         {
             if (player.health <= 0) { Transition("Player Dead"); }
-            else if (player.holding == null && Input.GetButtonDown("Jump")) { Transition("Player Jumping"); }
-            else if (!player.isGrounded && player.LocalVelocity().y < 0) { Transition("Player Falling"); }
-            else if (!player.isGrounded && player.LocalVelocity().y >= 0) { Transition("Player Rising"); }
-            else if (Input.GetButtonDown("Flip")) { Transition("Player Flipping"); }
+            else if (!player.isGrounded)
+            {
+                if (player.localVelocity.y > 0) { Transition("Player Rising"); }
+                else { Transition("Player Falling"); }
+            }
+            else if (Input.GetAxisRaw("Horizontal") == 0) { Transition("Player Idle"); }
+            else if (Input.GetButtonDown("Jump")) { Transition("Player Jumping"); }
         }
 
         public override void FixedUpdate()
         {
             // Create Vector2 movement where the x value is the horizontal input axis.
-            Vector2 movement = new Vector2(Input.GetAxis("Horizontal"), 0);
+            float direction = Input.GetAxisRaw("Horizontal");
 
-            // Add movement * the local rotation of the player * the player's speed as a force to the player.
-            //player.rigidbody.AddForce(player.transform.localRotation * movement * player.speed);
-
-            //player.rigidbody.velocity = new Vector2((player.transform.localRotation * movement).x * player.speed, player.rigidbody.velocity.y);
-            //movement *= player.speed;
-            //movement.Scale(player.transform.right);
-            //player.rigidbody.velocity = movement;
-
-            player.Move(movement, player.speed);
-
-            player.Flip();
+            player.Move(acclPerFrame, direction);
         }
     }
     /// <summary>
@@ -497,6 +546,7 @@ public class PlayerNetwork : CharacterStateNetwork {
         /// The maximum time to stay in this state.
         /// </summary>
         public float maxTime;
+        public float minTime;
         /// <summary>
         /// Time elapsed in this state.
         /// </summary>
@@ -507,28 +557,35 @@ public class PlayerNetwork : CharacterStateNetwork {
         /// </summary>
         /// <param name="maxTime">The jump buffer time. Time to stay in this state.</param>
         /// <param name="network">Reference to the player's state machine.</param>
-        public PlayerJumping(float maxTime, PlayerNetwork network) : base("Player Jumping", network) {
+        public PlayerJumping(float maxTime, float minTime, PlayerNetwork network) : base("Player Jumping", network) {
             this.maxTime = maxTime;
-            elapsedTime = 0;
+            this.minTime = minTime;
         }
 
         public override void Subject()
         {
             if (player.health <= 0f) { Transition("Player Dead"); }
-            else if (player.isGrounded) { Transition("Player Walking"); }
-            else if (player.LocalVelocity().y < 0 && elapsedTime > maxTime) { Transition("Player Falling"); }
-            else if (player.LocalVelocity().y >= 0 && elapsedTime > maxTime) { Transition("Player Rising"); }
-            else if (Input.GetButtonDown("Flip")) { Transition("Player Flip"); }
+            else if (elapsedTime > minTime)
+            {
+                if (elapsedTime < maxTime)
+                {
+                    if (player.isGrounded) { Transition("Player Idle"); }
+                }
+                else
+                {
+                    if (player.isGrounded) { Transition("Player Idle"); }
+                    else if (player.localVelocity.y > 0) { Transition("Player Rising"); }
+                    else { Transition("Player Falling"); }
+                }
+            }
         }
 
         public override void OnStateEnter()
         {
-            // If the player is grounded,
-            if (player.isGrounded)
-            {
-                // Add a relative force of jumpforce on the y axis to the player.
-                player.rigidbody.AddRelativeForce(new Vector2(0f, player.jumpForce));
-            }
+            elapsedTime = 0;
+
+            // Add a relative force of jumpforce on the y axis to the player.
+            player.rigidbody.AddRelativeForce(new Vector2(0f, player.jumpForce));
         }
 
         public override void FixedUpdate()
@@ -538,21 +595,6 @@ public class PlayerNetwork : CharacterStateNetwork {
                 // Add the duration of 1 frame to elapsed time.
                 elapsedTime += Time.deltaTime;
             }
-
-            // Create a Vector2 movement where the x component is the horizontal input axis, and the y component is the vertical input axis.
-            Vector2 movement = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
-
-            // Add movement * player's local rotation * player strafe speed as a force on the player.
-            //player.rigidbody.velocity = new Vector2((player.transform.localRotation * movement).x * player.speed, player.rigidbody.velocity.y);
-
-            player.Move(movement, player.strafeSpeed);
-
-            player.Flip();
-        }
-
-        public override void OnStateExit()
-        {
-            elapsedTime = 0f;
         }
     }
     /// <summary>
@@ -563,27 +605,28 @@ public class PlayerNetwork : CharacterStateNetwork {
         /// Creates a Player Rising state.
         /// </summary>
         /// <param name="network">Reference to the player's state machine.</param>
+        public float acclPerFrame;
+
         public PlayerRising(PlayerNetwork network) : base("Player Rising", network) { }
 
         public override void Subject()
         {
             if (player.health <= 0) { Transition("Player Dead"); }
-            else if (player.isGrounded) { Transition("Player Walking"); }
-            else if (player.LocalVelocity().y < 0) { Transition("Player Falling"); }
-            else if (Input.GetButtonDown("Flip")) { Transition("Player Flipping"); }
+            else if (player.isGrounded) { Transition("Player Idle"); }
+            else if (player.localVelocity.y <= 0) { Transition("Player Falling"); }
+        }
+
+        public override void OnStateEnter()
+        {
+            acclPerFrame = player.strafeAcceleration * Time.deltaTime;
         }
 
         public override void FixedUpdate()
         {
-            // Create a Vector2 movement where the x component is the horizontal input axis, and the y component is the vertical input axis.
-            Vector2 movement = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
+            // Create Vector2 movement where the x value is the horizontal input axis.
+            float direction = Input.GetAxisRaw("Horizontal");
 
-            // Add movement * player's local rotation * player strafe speed as a force on the player.
-            //player.rigidbody.velocity = new Vector2((player.transform.localRotation * movement).x * player.speed, player.rigidbody.velocity.y);
-
-            player.Move(movement, player.strafeSpeed);
-
-            player.Flip();
+            player.Move(acclPerFrame, direction);
         }
     }
     /// <summary>
@@ -594,26 +637,34 @@ public class PlayerNetwork : CharacterStateNetwork {
         /// Creates a Player Falling state.
         /// </summary>
         /// <param name="network">Reference to the player's state machine.</param>
-        public PlayerFalling(PlayerNetwork network) : base("Player Falling", network) { }
+        public float acclPerFrame;
+        public float elapsed;
+        public float freeTime;
+
+        public PlayerFalling(PlayerNetwork network, float freeTime) : base("Player Falling", network) { this.freeTime = freeTime; }
 
         public override void Subject()
         {
             if (player.health <= 0) { Transition("Player Dead"); }
-            else if (player.isGrounded) { Transition("Player Walking"); }
-            else if (player.LocalVelocity().y >= 0) { Transition("Player Rising"); }
+            else if (player.isGrounded) { Transition("Player Idle"); }
+            else if (player.localVelocity.y > 0) { Transition("Player Rising"); }
+            else if (player.previousState != player.rising && player.previousState != player.flipping) {
+                if (elapsed < freeTime && Input.GetButtonDown("Jump")) { Transition("Player Jumping"); }
+            }
+        }
+
+        public override void OnStateEnter()
+        {
+            elapsed = 0;
+            acclPerFrame = player.strafeAcceleration * Time.deltaTime;
         }
 
         public override void FixedUpdate()
         {
-            // Create a Vector2 movement where the x component is the horizontal input axis, and the y component is the vertical input axis.
-            Vector2 movement = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
+            // Create Vector2 movement where the x value is the horizontal input axis.
+            float direction = Input.GetAxisRaw("Horizontal");
 
-            // Add movement * player's local rotation * player strafe speed as a force on the player.
-            //player.rigidbody.velocity = new Vector2((player.transform.localRotation * movement).x * player.speed, player.rigidbody.velocity.y);
-
-            player.Move(movement, player.strafeSpeed);
-
-            player.Flip();
+            player.Move(acclPerFrame, direction);
         }
     }
     /// <summary>

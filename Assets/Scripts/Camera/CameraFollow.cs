@@ -5,7 +5,16 @@ using UnityEngine;
 public class CameraFollow : MonoBehaviour {
 
     public Transform target;
-    public PlayerControlerV2 player;
+    public PlayerNetwork player {
+        get {
+            if (!_player) {
+                _player = FindObjectOfType<PlayerNetwork>();
+            }
+
+            return _player;
+        }
+    }
+
     public Vector3 offset;
     public Vector2 predictionAmount;
 
@@ -13,15 +22,14 @@ public class CameraFollow : MonoBehaviour {
     public float rotationSpeed;
     public bool prediction;
 
+    private PlayerNetwork _player;
+
 	// Use this for initialization
 	void Start () {
-        FindPlayer();
 	}
 	
 	// Update is called once per frame
 	void FixedUpdate () {
-        if (!player) { FindPlayer(); }
-
         MoveCamera();
 	}
 
@@ -34,23 +42,23 @@ public class CameraFollow : MonoBehaviour {
         position = new Vector3(player.transform.position.x, player.transform.position.y, offset.z);
 
         
-        if (!player.isFliping)
-        {
-            position = player.transform.position + offset;
-            if (prediction && player)
-            {
-                Vector2 velocity = player.rigidbody.velocity;
-                velocity.Scale(predictionAmount);
-                position += (Vector3) velocity;
-            }
+        //if (!player.isFliping)
+        //{
+        //    position = player.transform.position + offset;
+        //    if (prediction && player)
+        //    {
+        //        Vector2 velocity = player.rigidbody.velocity;
+        //        velocity.Scale(predictionAmount);
+        //        position += (Vector3) velocity;
+        //    }
 
-        }
-        else {
-            //transform.forward = player.transform.forward;
-            position = new Vector3(player.transform.position.x, player.transform.position.y, offset.z);
+        //}
+        //else {
+        //    transform.forward = player.transform.forward;
+        //    position = new Vector3(player.transform.position.x, player.transform.position.y, offset.z);
 
-            //transform.position = position;
-        }
+        //    transform.position = position;
+        //}
         
 
         transform.position = Vector3.Lerp(transform.position, position, cameraSpeed * Time.deltaTime);
@@ -62,18 +70,7 @@ public class CameraFollow : MonoBehaviour {
         MoveCamera(out position);
     }
 
-    public void FindPlayer() {
-        player = FindObjectOfType<PlayerControlerV2>();
-
-        if (!player) { Debug.LogError("Could not locate player! Check to see if the player is in the scene, tagged as 'Player', and has the PlayerNetwork (or some derivative behavior) attached.", this); }
-        else { target = player.transform; }
-    }
-
     private void OnDrawGizmos() {
-        if (!player) { FindPlayer(); }
-
-        if (!Application.isPlaying)
-            MoveCamera();
     }
 
     

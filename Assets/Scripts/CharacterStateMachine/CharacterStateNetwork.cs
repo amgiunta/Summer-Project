@@ -6,6 +6,8 @@ using UnityEngine;
 public class CharacterStateNetwork : MonoBehaviour{
     List<CharacterState> network;
     public CharacterState activeState;
+    public CharacterState previousState;
+    public string currentState;
 
     public CharacterStateNetwork() {
         network = new List<CharacterState>();
@@ -23,6 +25,10 @@ public class CharacterStateNetwork : MonoBehaviour{
     {
         activeState.Subject();
         activeState.Update();
+
+        if (activeState) {
+            currentState = activeState.name;
+        }
     }
 
     public virtual void FixedUpdate()

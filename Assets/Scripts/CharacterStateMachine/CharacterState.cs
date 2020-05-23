@@ -78,6 +78,7 @@ public class StateTransition {
         to.OnStateEnter();
 
         to.network.activeState = to;
+        to.network.previousState = from;
 
         if (continueWith != null)
         {
