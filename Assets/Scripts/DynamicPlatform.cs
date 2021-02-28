@@ -18,11 +18,6 @@ public class DynamicPlatform : MonoBehaviour {
     public float friction;
 
     /// <summary>
-    /// Current acting player in the scene.
-    /// </summary>
-    [HideInInspector]
-    public PlayerNetwork player;
-    /// <summary>
     /// The rigidbody attached to this object.
     /// </summary>
     [HideInInspector]
@@ -49,8 +44,6 @@ public class DynamicPlatform : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        // Find the player and store a reference to it.
-        FindPlayer();
         // Get the rigidbody on this object.
         rigidbody = GetComponent<Rigidbody2D>();
 	}
@@ -76,19 +69,6 @@ public class DynamicPlatform : MonoBehaviour {
 
     public void Orientation(float angle) {
         _absoluteRotation = Quaternion.Euler(0, 0, angle);
-
-        Debug.Log("Changed the orientation to " + angle);
-    }
-
-    /// <summary>
-    /// Find the current acting player in the scene and store it in this object.
-    /// </summary>
-    public virtual void FindPlayer() {
-        // Find the object in the scene with the tag "Player" and store a reference in DynamicPlatform.player. 
-        player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerNetwork>();
-
-        // If player is not found, throw error.
-        if (!player) { Debug.LogError("Could not locate player! Check to see if the player is in the scene, tagged as 'Player', and has the PlayerNetwors (or some derivative behavior) attached.", this); }
     }
 
     /// <summary>
@@ -139,7 +119,6 @@ public class DynamicPlatform : MonoBehaviour {
         {
             other.transform.parent = null;
             other.gameObject.GetComponent<Rigidbody2D>().velocity += (Vector2)velocity;
-            Debug.Log("object left platform.", other.transform);
         }
     }
 }

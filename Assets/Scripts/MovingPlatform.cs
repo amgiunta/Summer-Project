@@ -87,8 +87,18 @@ public class MovingPlatform : DynamicPlatform {
     }
 
     public virtual void MoveToPoint(int pointIndex) {
-        if (!isMoving)
+        MoveToPoint(pointIndex, false);
+    }
+
+    public virtual void MoveToPoint(int pointIndex, bool wait = true) {
+        if (wait)
+        {
+            if (!isMoving)
+                StartCoroutine(MoveToPoint(pathPoints[pointIndex]));
+        }
+        else {
             StartCoroutine(MoveToPoint(pathPoints[pointIndex]));
+        }
     }
 
     /// <summary>

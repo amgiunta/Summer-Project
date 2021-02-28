@@ -36,7 +36,7 @@ public class CameraFollow : MonoBehaviour {
     public void MoveCamera(out Vector3 position) {
 
         if (player) {
-            transform.rotation = Quaternion.Slerp(transform.rotation, player.transform.rotation, Time.deltaTime * rotationSpeed);
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Vector3.forward, player.transform.up), Time.deltaTime * rotationSpeed);
         }
 
         position = new Vector3(player.transform.position.x, player.transform.position.y, offset.z);

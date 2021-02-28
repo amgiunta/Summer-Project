@@ -1,7 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEditor.Animations;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.SocialPlatforms;
 
 /// <summary>
 /// A basic character controller that utilises the Character State Machine framework.
@@ -9,12 +12,15 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(Collider2D))]
 public class PlayerNetwork : CharacterStateNetwork {
-    public LayerMask groundLayer;
+    public static PlayerNetwork player;
+
+    public ContactFilter2D groundFilter;
     public float gravityScale;
     [Tooltip("Movement speed on the ground (m/s)")]
     public float acceleration;
     public float decceleration;
     public float strafeAcceleration;
+    public float maxAngle;
     [Tooltip("Maximum fall speed (m/s)")]
     public float maxFallSpeed;
     [Tooltip("Maximum movement speed (m/s)")]
@@ -41,22 +47,28 @@ public class PlayerNetwork : CharacterStateNetwork {
     [Tooltip("A relative force vector to apply to the held object when thrown.")]
     public Vector2 throwForce;
 
+    [HideInInspector]
+    public bool canFlip;
+
     /// <summary>
     /// Flag for when the player is on the ground.
     /// </summary>
-    [HideInInspector]
     public bool isGrounded;
     /// <summary>
     /// A reference to the object currently being held by the player.
     /// </summary>
-    public HoldableObject holding;
+    public HoldableObjectV2 holding;
 
     new public Rigidbody2D rigidbody;
-    new public Collider2D collider;
+    new public CapsuleCollider2D collider;
     public CameraFollow mainCamera;
 
     [HideInInspector]
-    public Vector2 localVelocity;
+    public Vector2 localVelocity {
+        get { 
+            return transform.InverseTransformDirection(rigidbody.velocity);
+        }
+    }
 
     Vector2 _lastNormal;
     Vector2 _lastNormalPosition;
@@ -78,15 +90,65 @@ public class PlayerNetwork : CharacterStateNetwork {
     public PlayerFlipping flipping;
     #endregion
 
+    private Vector2 down;
+    private float capsuleRadius {
+        get {
+            if (collider.direction == CapsuleDirection2D.Horizontal)
+            {
+                return collider.size.y / 2;
+            }
+            else {
+                return collider.size.x / 2;
+            }
+        }
+    }
+    private float playerWidth {
+        get {
+            if (collider.direction == CapsuleDirection2D.Horizontal)
+            {
+                return collider.size.x - collider.size.y;
+            }
+            else {
+                return collider.size.x;
+            }
+        }
+    }
+    private float playerHeight
+    {
+        get
+        {
+            if (collider.direction == CapsuleDirection2D.Horizontal)
+            {
+                return collider.size.y;
+            }
+            else
+            {
+                return collider.size.y - collider.size.x;
+            }
+        }
+    }
+    public int facing = 1;
+
+    public void Awake()
+    {
+        if (player) {
+            Destroy(player.gameObject);
+        }
+
+        player = this;
+    }
+
     public void Start()
     {
         rigidbody = GetComponent<Rigidbody2D>();
-        collider = GetComponent<Collider2D>();
+        collider = GetComponent<CapsuleCollider2D>();
         mainCamera = FindObjectOfType<CameraFollow>();
         hand = transform.Find("Sprite").Find("Hand");
         closePoints = new List<RaycastHit2D>();
 
         if (!hand) { Debug.LogError("No hand on player detected! Make sure there is a 'Hand' child under the player, and name it accordingly."); }
+
+        down = -transform.up;
 
         CreateNetwork();
     }
@@ -94,69 +156,46 @@ public class PlayerNetwork : CharacterStateNetwork {
     public override void Update()
     {
         base.Update();
+        GroundCheck();
 
-        localVelocity = transform.InverseTransformDirection(rigidbody.velocity);
+        Debug.DrawRay(transform.position, down * 10, Color.blue);
 
-        // If the timescale is greater than 0,
-        if (Time.timeScale > 0)
-        {
-            // Check if the player is on the ground.
-            GroundCheck();
-
-            // If the jump button is pressed, and the player is holding an object,
-            if (Input.GetButtonDown("Jump") && holding)
-            {
-                // Throw the object.
-                ThrowHeldProp();
-            }
-
-            // If the use button is pressed,
-            if (Input.GetButtonDown("Use"))
-            {
-                // and if the player is walking,
-                if (walking)
-                {
-                    // but not holding anything,
-                    if (!holding)
-                    {
-                        // Pick up the nearest object if it exists.
-                        GrabNearestProp();
-                    }
-                    // or if it is holding something,
-                    else
-                    {
-                        // drop it.
-                        ReleaseHeldProp();
-                    }
-                }
-                // or as long as player is not flipping,
-                else if (activeState != flipping)
-                {
-                    // If the player is holding something,
+        if (Time.timeScale > 0) {
+            if (Input.GetButtonDown("Use")) {
+                if (activeState != flipping && activeState != dead) {
                     if (holding)
                     {
-                        // drop it.
                         ReleaseHeldProp();
+                    }
+                    else
+                    {
+                        GrabNearestProp();
                     }
                 }
             }
         }
+        
     }
 
     public override void FixedUpdate()
     {
         base.FixedUpdate();
 
-        // Add the force of grabity to this object on the relative up vector.
-        ApplyGravity();
+        if (hand.localPosition.x != facing) {
+            hand.localPosition = Vector3.Lerp(hand.localPosition, new Vector2(facing, playerHeight), Time.deltaTime * acceleration);
 
-        //Debug.Log("The active state is: " + activeState.name);
-    }
-    
-    private void Flip() {
-        float direction = Input.GetAxis("Horizontal") > 0 ? 1 : -1;
+            if (Mathf.Abs(hand.localPosition.x - facing) < Time.deltaTime * acceleration) {
+                hand.localPosition = new Vector3(facing, playerHeight);
+            }
+        }
 
-        transform.Find("Sprite").localScale = new Vector3(direction, transform.Find("Sprite").localScale.y, transform.Find("Sprite").localScale.z);
+        Debug.DrawRay(transform.position, rigidbody.velocity, Color.red);
+
+        if (activeState != flipping && activeState != dead)
+        {
+            // Add the force of grabity to this object on the relative up vector.
+            ApplyGravity();
+        }
     }
 
     /// <summary>
@@ -164,17 +203,19 @@ public class PlayerNetwork : CharacterStateNetwork {
     /// </summary>
     protected virtual void ApplyGravity()
     {
-        
-        Vector2 normal = CalculateNormal();
+        if (isGrounded)
+        {
+            down = -CalculateNormal();
+        }
 
-        transform.up = normal;
+        //transform.up = -down;
         //transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Vector3.forward, normal), 5f * Time.deltaTime);
         //transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(Vector3.forward, normal), 5f * Time.deltaTime);
         //rigidbody.MoveRotation(Quaternion.LookRotation(Vector3.forward, normal));
-        transform.rotation = Quaternion.LookRotation(Vector3.forward, normal);
+        transform.rotation = Quaternion.LookRotation(Vector3.forward, -down);
 
+        Vector3 direction = down;
         // Create Vector direction that is the negative relative up vector
-        Vector3 direction = -normal;
         // Multiply the direction by: the negative force of gravity multiplied by the mass of this object.
         direction *= (-Physics2D.gravity.y * rigidbody.mass);
         // Add direction to this object as a force.
@@ -201,27 +242,29 @@ public class PlayerNetwork : CharacterStateNetwork {
         idle.AddTransition(rising);
         idle.AddTransition(falling);
         idle.AddTransition(jumping);
+        idle.AddTransition(flipping);
 
         walking.AddTransition(dead);
         walking.AddTransition(rising);
         walking.AddTransition(falling);
         walking.AddTransition(idle);
         walking.AddTransition(jumping);
+        walking.AddTransition(flipping);
 
         jumping.AddTransition(dead);
         jumping.AddTransition(idle);
         jumping.AddTransition(rising);
         jumping.AddTransition(falling);
-        jumping.AddTransition(flipping);
 
         rising.AddTransition(dead);
         rising.AddTransition(idle);
         rising.AddTransition(falling);
+        rising.AddTransition(flipping);
 
         falling.AddTransition(dead);
         falling.AddTransition(idle);
         falling.AddTransition(rising);
-        falling.AddTransition(jumping);
+        falling.AddTransition(flipping);
 
         flipping.AddTransition(walking);
         flipping.AddTransition(falling);
@@ -239,23 +282,22 @@ public class PlayerNetwork : CharacterStateNetwork {
     }
 
     public void Move(float acceleration, float direction) {
+        if (direction == 0) { return; }
+
         Vector2 newLocalVel = localVelocity;
 
-        if (Mathf.Abs(localVelocity.x) < maxSpeed)
+        if (localVelocity.x > 0 && direction < 0 || localVelocity.x < 0 && direction > 0) {
+            newLocalVel = new Vector2(-localVelocity.x, localVelocity.y);
+        }        
+
+        if (Mathf.Abs(newLocalVel.x) < maxSpeed)
         {
-            newLocalVel = localVelocity + new Vector2(acceleration * direction, 0);
+            newLocalVel = newLocalVel + new Vector2(acceleration * direction, 0);
         }
 
-        rigidbody.velocity = transform.TransformDirection(newLocalVel);
-    }
+        facing = (int) (Mathf.Abs(direction) / direction);
 
-    /// <summary>
-    /// Get the radius of a circle swept out by the player if it were to flip.
-    /// </summary>
-    /// <returns>The radius of a circle</returns>
-    private float GetFlipRadius() {
-        if (transform.localScale.x/2 > transform.localScale.y/2) { return transform.localScale.x/2; }
-        else { return transform.localScale.y/2; }
+        rigidbody.velocity = transform.TransformDirection(newLocalVel);
     }
 
     /// <summary>
@@ -270,17 +312,16 @@ public class PlayerNetwork : CharacterStateNetwork {
 
         // If there are no props, stop algorythm.
         if (props.Length == 0) { return; }
-        else { Debug.Log(props.Length); }
 
         // Create Holdable Object nearest that is the first prop.
-        HoldableObject nearest = props[0].GetComponent<HoldableObject>();
+        HoldableObjectV2 nearest = props[0].GetComponent<HoldableObjectV2>();
 
         // For every prop in the list of props,
         foreach (Collider2D prop in props) {
             // If the distance between the prop and the player is less than the nearest prop and the player,  
             if (Vector2.Distance(prop.transform.position, transform.position) < Vector2.Distance(nearest.transform.position, transform.position)) {
                 // Set nearest to the prop.
-                nearest = prop.GetComponent<HoldableObject>();
+                nearest = prop.GetComponent<HoldableObjectV2>();
             }
         }
 
@@ -297,6 +338,8 @@ public class PlayerNetwork : CharacterStateNetwork {
     private void ReleaseHeldProp() {
         // If the player is not holding anything, stop the algorythm.
         if (!holding) { return; }
+
+        holding.onReleased.Invoke();
 
         // Set the parent of the held object to null.
         holding.transform.parent = null;
@@ -316,14 +359,6 @@ public class PlayerNetwork : CharacterStateNetwork {
         // If the player is not holding anything, stop the algorythm.
         if (!holding) { return; }
 
-        // Create float x direction that is 1.
-        float xDirection = 1;
-
-        // If the x-scale of this object is positive, x direction is 1.
-        if (transform.localScale.x > 0) { xDirection = 1; }
-        // Otherwise, x direction is -1.
-        else { xDirection = -1; }
-
         // Create Rigidbody2D prop body that is the rigidbody attached to the held prop.
         Rigidbody2D propBody = holding.GetComponent<Rigidbody2D>();
         // Release the held prop.
@@ -331,7 +366,7 @@ public class PlayerNetwork : CharacterStateNetwork {
         // Set the velocity of the prop body to be the velocity of the player.
         propBody.velocity = rigidbody.velocity;
         // Create Vector3 throw vector where: x is the throw force by the x direction, y is the throw force, z is 0.
-        Vector3 throwVector = new Vector3(throwForce.x * xDirection, throwForce.y, 0f);
+        Vector3 throwVector = new Vector3(throwForce.x * facing, throwForce.y, 0f);
         // Add the throw vector rotated by the player's rotation.
         propBody.AddForce(transform.rotation * throwVector);
     }
@@ -342,7 +377,9 @@ public class PlayerNetwork : CharacterStateNetwork {
     /// <param name="animationTime">Duration of the movement (in seconds).</param>
     /// <param name="prop">A reference to the Holdable Object to move.</param>
     /// <returns>An enumerator</returns>
-    private IEnumerator MovePropToHand(float animationTime, HoldableObject prop) {
+    private IEnumerator MovePropToHand(float animationTime, HoldableObjectV2 prop) {
+
+        prop.onPickedUp.Invoke();
         // Set the held object reference to the prop.
         holding = prop;
         // Create a Rigidbody2D prop body that is the rigidbody attached to the prop.
@@ -356,9 +393,13 @@ public class PlayerNetwork : CharacterStateNetwork {
         for (float t = 0; t < animationTime; t += Time.deltaTime) {
             // Set the position of the prop to the linear interpolation at position t on the line between the position of the prop, and the position of this object.
             prop.transform.position = Vector3.Lerp(prop.transform.position, hand.position, t);
+            prop.transform.rotation = Quaternion.Slerp(prop.transform.rotation, hand.rotation, t);
             // Wait for 1 frame.
             yield return new WaitForEndOfFrame();
         }
+
+        prop.transform.position = hand.position;
+        prop.transform.rotation = hand.rotation;
 
         // Set the parent of the prop to the player's hand.
         prop.transform.parent = hand;
@@ -368,15 +409,21 @@ public class PlayerNetwork : CharacterStateNetwork {
     /// Check if the player is on the ground.
     /// </summary>
     private void GroundCheck() {
-        ContactFilter2D filter = new ContactFilter2D();
-        filter.layerMask = groundLayer;
-
         // Create a Collider2D collider that is any environment piece that is within a box around the player that is half the player's width, and 0.2 m tall.
-        Collider2D collider = Physics2D.OverlapBox(transform.position, new Vector2(transform.lossyScale.x/2, 0.2f), 0, groundLayer);
-        
-        Physics2D.CircleCast(transform.position, transform.lossyScale.x / 2, -transform.up, filter, closePoints, 10);
+        //Collider2D collider = Physics2D.OverlapBox(transform.position, new Vector2(transform.lossyScale.x/2, 0.2f), 0, groundFilter.layerMask);
+
+        //Physics2D.CircleCast(transform.position + (playerHeight * transform.up), transform.lossyScale.x / 2, -transform.up, groundFilter, closePoints, playerHeight + 0.2f);
+        Vector2 top = transform.position + (playerHeight * transform.up);
+
+        RaycastHit2D leftFoot = Physics2D.Raycast(top - new Vector2(playerWidth / 2, 0), down, playerHeight + 0.2f, groundFilter.layerMask);
+        RaycastHit2D rightFoot = Physics2D.Raycast(top + new Vector2(playerWidth / 2, 0), down, playerHeight + 0.2f, groundFilter.layerMask);
+
+        closePoints = new List<RaycastHit2D> { leftFoot, rightFoot };
+
+        Debug.DrawRay(transform.position + (playerHeight * transform.up), -transform.up * (playerHeight + 0.2f), Color.yellow);
+
         // If the collider exists, the player is grounded.
-        if (collider) { isGrounded = true; }
+        if (leftFoot || rightFoot) { isGrounded = true; canFlip = true; }
         // Otherwise, the player is not grounded.
         else { isGrounded = false; }
     }
@@ -392,33 +439,37 @@ public class PlayerNetwork : CharacterStateNetwork {
             Debug.DrawRay(hitPoint.point, hitPoint.normal, Color.green);
         }
 
-        Debug.Break();
+        //Debug.Break();
 
-        Vector2 normal = normalSum / closePoints.Count;
+        //Vector2 normal = normalSum / closePoints.Count;
 
-        return normal;
+        if (Vector2.Angle(normalSum, transform.up) < maxAngle)
+        {
+            return normalSum;
+        }
+        else { return transform.up; }
     }
 
     private void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.yellow;
-        if (!collider) { collider = GetComponent<Collider2D>(); }
-        if (!rigidbody) { rigidbody = GetComponent<Rigidbody2D>(); }
+        //Gizmos.color = Color.yellow;
+        //if (!collider) { collider = GetComponent<Collider2D>(); }
+        //if (!rigidbody) { rigidbody = GetComponent<Rigidbody2D>(); }
 
-        Gizmos.DrawWireSphere(GetFlipPivot(flipOffset), GetFlipRadius());
-        Gizmos.DrawWireSphere(transform.position, maxReach);
-        Gizmos.color = Color.blue;
-        Gizmos.DrawWireCube(transform.position, new Vector2(transform.localScale.x / 2, 0.2f));
-        Gizmos.color = Color.red;
-        Vector2 normal = CalculateNormal();
+        //Gizmos.DrawWireSphere(GetFlipPivot(flipOffset), GetFlipRadius());
+        //Gizmos.DrawWireSphere(transform.position, maxReach);
+        //Gizmos.color = Color.blue;
+        //Gizmos.DrawWireCube(transform.position, new Vector2(transform.localScale.x / 2, 0.2f));
+        //Gizmos.color = Color.red;
+        //Vector2 normal = CalculateNormal();
 
-        Debug.DrawRay(transform.position, normal, Color.red);
+        //Debug.DrawRay(transform.position, normal, Color.red);
 
-        ApplyGravity();
+        //ApplyGravity();
 
-        //if (Application.isPlaying) { Debug.DrawRay(transform.position, rigidbody.velocity, Color.red); }
+        ////if (Application.isPlaying) { Debug.DrawRay(transform.position, rigidbody.velocity, Color.red); }
 
-        Debug.DrawRay(transform.position, transform.up, Color.blue);
+        //Debug.DrawRay(transform.position, transform.up, Color.blue);
     }
 
     /// <summary>
@@ -480,6 +531,7 @@ public class PlayerNetwork : CharacterStateNetwork {
             }
             else if (Input.GetAxis("Horizontal") != 0) { Transition("Player Walking"); }
             else if (Input.GetButtonDown("Jump")) { Transition("Player Jumping"); }
+            else if (Input.GetButtonDown("Flip") && player.canFlip) { Transition("Player Flipping"); }
         }
 
         public override void FixedUpdate()
@@ -509,7 +561,7 @@ public class PlayerNetwork : CharacterStateNetwork {
         /// Creates a Player Walking state.
         /// </summary>
         /// <param name="network">Reference to the player's state machine.</param>
-        public float acclPerFrame; 
+        public float acclPerFrame;
 
         public PlayerWalking(PlayerNetwork network) : base("Player Walking", network) { }
 
@@ -528,6 +580,7 @@ public class PlayerNetwork : CharacterStateNetwork {
             }
             else if (Input.GetAxisRaw("Horizontal") == 0) { Transition("Player Idle"); }
             else if (Input.GetButtonDown("Jump")) { Transition("Player Jumping"); }
+            else if (Input.GetButtonDown("Flip") && player.canFlip) { Transition("Player Flipping"); }
         }
 
         public override void FixedUpdate()
@@ -595,6 +648,11 @@ public class PlayerNetwork : CharacterStateNetwork {
                 // Add the duration of 1 frame to elapsed time.
                 elapsedTime += Time.deltaTime;
             }
+
+            if (player.holding && elapsedTime > 2 * Time.deltaTime)
+            {
+                player.ThrowHeldProp();
+            }
         }
     }
     /// <summary>
@@ -614,6 +672,7 @@ public class PlayerNetwork : CharacterStateNetwork {
             if (player.health <= 0) { Transition("Player Dead"); }
             else if (player.isGrounded) { Transition("Player Idle"); }
             else if (player.localVelocity.y <= 0) { Transition("Player Falling"); }
+            else if (Input.GetButtonDown("Flip") && player.canFlip) { Transition("Player Flipping"); }
         }
 
         public override void OnStateEnter()
@@ -648,9 +707,7 @@ public class PlayerNetwork : CharacterStateNetwork {
             if (player.health <= 0) { Transition("Player Dead"); }
             else if (player.isGrounded) { Transition("Player Idle"); }
             else if (player.localVelocity.y > 0) { Transition("Player Rising"); }
-            else if (player.previousState != player.rising && player.previousState != player.flipping) {
-                if (elapsed < freeTime && Input.GetButtonDown("Jump")) { Transition("Player Jumping"); }
-            }
+            else if (Input.GetButtonDown("Flip") && player.canFlip) { Transition("Player Flipping"); }
         }
 
         public override void OnStateEnter()
@@ -708,8 +765,6 @@ public class PlayerNetwork : CharacterStateNetwork {
 
         public override void OnStateEnter()
         {
-            // Pause time.
-            Time.timeScale = 0;
             // Set finished animating flag to false.
             doneAnimating = false;
             // Set the body type of the player to kinematic.
@@ -723,10 +778,10 @@ public class PlayerNetwork : CharacterStateNetwork {
 
         public override void OnStateExit()
         {
-            // Resume time at normal speed.
-            Time.timeScale = 1;
             // Set the player's body type to dynamic.
             player.rigidbody.bodyType = RigidbodyType2D.Dynamic;
+
+            player.canFlip = false;
         }
 
         /// <summary>
@@ -764,6 +819,9 @@ public class PlayerNetwork : CharacterStateNetwork {
             }
 
             player.transform.rotation = targetRotation;
+
+            player.down = -player.transform.up;
+
 
             // Set the done animating flag to true.
             doneAnimating = true;

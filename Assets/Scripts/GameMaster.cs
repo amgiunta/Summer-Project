@@ -24,6 +24,11 @@ public class GameMaster : MonoBehaviour {
         #endregion
     }
 
+    private void FixedUpdate()
+    {
+        relativeGravityDirection = -PlayerNetwork.player.transform.up;
+    }
+
     /// <summary>
     /// Re-loads the current open unity scene.
     /// </summary>

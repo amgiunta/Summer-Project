@@ -12,33 +12,40 @@ public class HoldableObjectV2 : MonoBehaviour
     RelativeGravity relativeGravity;
     Rigidbody2D rigidbody;
 
-    Transform _lastParent;
+    public Transform _lastParent;
 
     Vector3 startPos;
     Quaternion startRotation;
     Transform startParent;
 
+    public bool held = false;
+
     // Start is called before the first frame update
     void Start()
     {
-        startPos = transform.position;
+        startPos = transform.localPosition;
         startRotation = transform.rotation;
         startParent = transform.parent;
 
         relativeGravity = GetComponent<RelativeGravity>();
         rigidbody = GetComponent<Rigidbody2D>();
+
+        onPickedUp.AddListener(() => { 
+            held = true;
+            rigidbody.simulated = false;
+        });
+        onReleased.AddListener(() => { 
+            held = false;
+            rigidbody.simulated = true;
+        });
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (transform.parent)
-        {
-            if (transform.parent.CompareTag("Player") && _lastParent == null) { onPickedUp.Invoke(); }
-        }
-        else if (_lastParent) {
-            if (_lastParent.CompareTag("Player") && transform.parent == null) { onReleased.Invoke(); }
-        }
+        relativeGravity.enabled = !held;
+
+        Debug.DrawRay(transform.position, rigidbody.velocity, Color.red);
     }
 
     private void LateUpdate()
@@ -49,7 +56,7 @@ public class HoldableObjectV2 : MonoBehaviour
     public void Respawn() {
         rigidbody.velocity = Vector2.zero;
         transform.parent = startParent;
-        transform.position = startPos;
+        transform.localPosition = startPos;
         transform.rotation = startRotation;
         GetComponent<RelativeGravity>().SetGravityDirection(-transform.up);
     }
