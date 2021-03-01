@@ -102,17 +102,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 432277667}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0.3137255}
   m_RaycastTarget: 1
+  m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
-      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
   m_Sprite: {fileID: 21300000, guid: fa288c57f554c224587b740cdbca4d9f, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
@@ -122,6 +121,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &1680214653
 GameObject:
   m_ObjectHideFlags: 0
@@ -265,7 +265,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2085658520}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1980459831, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_UiScaleMode: 0
@@ -287,7 +287,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2085658520}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1301386320, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_IgnoreReversedGraphics: 1
@@ -341,13 +341,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 54bc2ff6db342ab43ab00ae69ba71554, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 0}
-  player: {fileID: 0}
+  cameraMode: 3
+  targets: []
   offset: {x: 0, y: 1, z: -10}
   predictionAmount: {x: 0.7, y: 0}
+  targetZoom: 8
+  defaultZoom: 6
+  margin: 1
   cameraSpeed: 1
+  zoomSpeed: 1
   rotationSpeed: 10
   prediction: 1
+  currentSpace: {fileID: 0}
+  targetBounds:
+    m_Center: {x: 0, y: 0, z: 0}
+    m_Extent: {x: 0, y: 0, z: 0}
+  cam: {fileID: 0}
 --- !u!1 &1889727821422430
 GameObject:
   m_ObjectHideFlags: 0
@@ -442,7 +451,7 @@ Animator:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1889727821422430}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 9100000, guid: 3b641e4eda76fde478ad441d69ba2c60, type: 2}
   m_CullingMode: 0

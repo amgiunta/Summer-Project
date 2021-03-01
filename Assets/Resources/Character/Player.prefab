@@ -56,14 +56,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1773571225874264}
-  m_LocalRotation: {x: 0, y: 0, z: -0.8080367, w: 0.5891322}
+  m_LocalRotation: {x: 0, y: 0, z: -0.80803615, w: 0.5891329}
   m_LocalPosition: {x: -17.05, y: -1.64, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 6593363594237348056}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -107.809006}
 --- !u!70 &70071596232371416
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -77,8 +77,8 @@ CapsuleCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0.00046944447, y: 0.23513329}
-  m_Size: {x: 0.52139515, y: 0.46973753}
+  m_Offset: {x: 0, y: 0.23}
+  m_Size: {x: 0.79, y: 0.44}
   m_Direction: 1
 --- !u!50 &50639504847137780
 Rigidbody2D:
@@ -113,9 +113,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db409df206e83f54991611f46eaee553, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 3
-  strafeSpeed: 3
-  fallSpeed: 5
+  currentState: 
+  groundFilter:
+    useTriggers: 1
+    useLayerMask: 1
+    useDepth: 0
+    useOutsideDepth: 0
+    useNormalAngle: 0
+    useOutsideNormalAngle: 0
+    layerMask:
+      serializedVersion: 2
+      m_Bits: 256
+    minDepth: 0
+    maxDepth: 0
+    minNormalAngle: 0
+    maxNormalAngle: 0
+  gravityScale: 1
+  acceleration: 10
+  decceleration: 50
+  strafeAcceleration: 10
+  maxAngle: 45
+  maxFallSpeed: 6
   maxSpeed: 3
   jumpForce: 200
   health: 100
@@ -125,11 +143,13 @@ MonoBehaviour:
   maxReach: 1
   flipOffset: {x: 0, y: 0.69}
   throwForce: {x: 50, y: 50}
+  canFlip: 0
   isGrounded: 0
   holding: {fileID: 0}
   rigidbody: {fileID: 50639504847137780}
   collider: {fileID: 70071596232371416}
   mainCamera: {fileID: 0}
+  facing: 1
 --- !u!1 &1047445842281555627
 GameObject:
   m_ObjectHideFlags: 0
@@ -177,6 +197,7 @@ SpriteRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 0
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
@@ -188,6 +209,7 @@ SpriteRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -198,7 +220,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: -501048837
-  m_SortingLayer: 3
+  m_SortingLayer: 2
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: 1eb2ecfa43d0dcc4cbc2bca3c4d1bb86, type: 3}
   m_Color: {r: 0.735849, g: 0.735849, b: 0.735849, a: 1}
