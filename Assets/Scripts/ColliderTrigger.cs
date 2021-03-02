@@ -8,6 +8,6 @@ using UnityEngine;
 public class ColliderTrigger : Trigger {
 
     void OnCollisionStay2D(Collision2D other) {
-        if (other.gameObject.CompareTag("Player")) { TripTrigger(); }
+        if (other.gameObject.CompareTag("Player")) { OnActivate.Invoke(); }
     }
 }

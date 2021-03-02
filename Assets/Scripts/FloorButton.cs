@@ -30,7 +30,7 @@ public class FloorButton : Trigger {
     /// Actions to trigger when the button becomes inactive.
     /// </summary>
     [Tooltip("Actions to trigger when the button becomes inactive.")]
-    public UnityEngine.Events.UnityEvent onDeactivate;
+    public UnityEngine.Events.UnityEvent OnDeactivate;
 
     /// <summary>
     /// The Animator attached to this object.
@@ -41,6 +41,7 @@ public class FloorButton : Trigger {
     {
         // Get the Animator attached to this object.
         animator = GetComponent<Animator>();
+        
     }
 
     /// <summary>
@@ -63,7 +64,7 @@ public class FloorButton : Trigger {
         state = ButtonState.Active;
 
         // Invoke activation actions
-        TripTrigger();
+        OnActivate.Invoke();
     }
 
     /// <summary>
@@ -76,7 +77,7 @@ public class FloorButton : Trigger {
         state = ButtonState.Inactive;
 
         // Invoke deactivation actions.
-        onDeactivate.Invoke();
+        OnDeactivate.Invoke();
     }
 
     /// <summary>
@@ -114,7 +115,7 @@ public class FloorButton : Trigger {
         if (bodies.Contains(body)) { bodies.Remove(body); }
     }
 
-    private void OnCollisionEnter2D(Collision2D other)
+    private void OnTriggerEnter2D(Collider2D other)
     {
         // If the tag of the colliding object is "Prop" or "Player",
         if (other.transform.CompareTag("Prop"))
@@ -138,7 +139,7 @@ public class FloorButton : Trigger {
         
     }
 
-    private void OnCollisionExit2D(Collision2D other)
+    private void OnTriggerExit2D(Collider2D other)
     {
         // If the tag of the colliding object is "Prop" or "Player",
         if (other.transform.CompareTag("Prop"))
