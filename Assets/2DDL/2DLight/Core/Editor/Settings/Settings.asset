@@ -16,6 +16,6 @@ MonoBehaviour:
   dateReleased: 10/04/2019
   layerMask:
     serializedVersion: 2
-    m_Bits: 3328
+    m_Bits: 3072
   layerCaster: 11
   LayerCreationHasBeenPerformed: 0
