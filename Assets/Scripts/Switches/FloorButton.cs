@@ -7,16 +7,6 @@ using UnityEngine;
 /// </summary>
 [RequireComponent(typeof(Animator))]
 public class FloorButton : Trigger {
-
-    /// <summary>
-    /// The different possible states of the switch.
-    /// </summary>
-    public enum ButtonState { Active, Inactive };
-    /// <summary>
-    /// The current state of the switch.
-    /// </summary>
-    [Tooltip("The current state of the switch.")]
-    public ButtonState state;
     [Tooltip("The minimum mass needed to activate the button.")]
     public float minimumMass;
     [Tooltip("Can the player trigger the switch?")]
@@ -26,12 +16,7 @@ public class FloorButton : Trigger {
     /// </summary>
     [HideInInspector]
     public List<Rigidbody2D> bodies = new List<Rigidbody2D>();
-    /// <summary>
-    /// Actions to trigger when the button becomes inactive.
-    /// </summary>
-    [Tooltip("Actions to trigger when the button becomes inactive.")]
-    public UnityEngine.Events.UnityEvent OnDeactivate;
-
+    
     /// <summary>
     /// The Animator attached to this object.
     /// </summary>
@@ -49,19 +34,19 @@ public class FloorButton : Trigger {
     /// </summary>
     private void ToggleButton() {
         // If the total mass is greater than the minimum mass, Activate the button.
-        if (TotalMass() > minimumMass) { ActivateButton(); }
+        if (TotalMass() > minimumMass) { Activate(); }
         // Otherwise, deactivate the button.
-        else { DeactivateButton(); }
+        else { Deactivate(); }
     }
 
     /// <summary>
     /// Activate the button.
     /// </summary>
-    private void ActivateButton() {
+    public override void Activate() {
         // Set the 'Active' bool on the animator to true.
         animator.SetBool("Active", true);
         // Set the button's current state to Active.
-        state = ButtonState.Active;
+        state = TriggerState.Active;
 
         // Invoke activation actions
         OnActivate.Invoke();
@@ -70,11 +55,11 @@ public class FloorButton : Trigger {
     /// <summary>
     /// Deactivate the button.
     /// </summary>
-    private void DeactivateButton() {
+    public override void Deactivate() {
         // Set the 'Active' bool on the animator to false.
         animator.SetBool("Active", false);
         // Set the current state of the button to inactive.
-        state = ButtonState.Inactive;
+        state = TriggerState.Inactive;
 
         // Invoke deactivation actions.
         OnDeactivate.Invoke();
@@ -115,7 +100,7 @@ public class FloorButton : Trigger {
         if (bodies.Contains(body)) { bodies.Remove(body); }
     }
 
-    private void OnTriggerEnter2D(Collider2D other)
+    protected override void OnTriggerEnter2D(Collider2D other)
     {
         // If the tag of the colliding object is "Prop" or "Player",
         if (other.transform.CompareTag("Prop"))
@@ -139,7 +124,7 @@ public class FloorButton : Trigger {
         
     }
 
-    private void OnTriggerExit2D(Collider2D other)
+    protected override void OnTriggerExit2D(Collider2D other)
     {
         // If the tag of the colliding object is "Prop" or "Player",
         if (other.transform.CompareTag("Prop"))
