@@ -10,12 +10,7 @@ public class LogicGate : Trigger
     public List<Trigger> inputs;
 
     public void Start() {
-        if (state == TriggerState.Inactive) {
-            Deactivate();
-        }
-        else {
-            Activate();
-        }
+        
     }
 
     public void GateCheck() {

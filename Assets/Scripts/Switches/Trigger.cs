@@ -36,6 +36,15 @@ public class Trigger : MonoBehaviour {
     /// </summary>
     public static int triggerCount;
 
+    private void Start() {
+        if (state == TriggerState.Inactive) {
+            Deactivate();
+        }
+        else {
+            Activate();
+        }
+    }
+
     /// <summary>
     /// Activate all the actions set on this trigger.
     /// </summary>
